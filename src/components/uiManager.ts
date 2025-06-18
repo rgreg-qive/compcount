@@ -404,16 +404,42 @@ export class UIManager {
         analysisId: analysisId
       };
       
-      // Salvar dados completos no localStorage para acesso posterior
+      // Salvar dados completos em múltiplos locais para garantir persistência
+      const storageKey = `shared-analysis-${analysisId}`;
+      const dataString = JSON.stringify(fullAnalysisData);
+      
       try {
-        localStorage.setItem(`shared-analysis-${analysisId}`, JSON.stringify(fullAnalysisData));
+        // Tentar localStorage
+        localStorage.setItem(storageKey, dataString);
+        console.log('✅ Dados salvos no localStorage com chave:', storageKey);
+        
+        // Também salvar no sessionStorage como backup
+        sessionStorage.setItem(storageKey, dataString);
+        console.log('✅ Dados salvos no sessionStorage como backup');
+        
+        // Salvar uma versão com chave alternativa (só o timestamp)
+        const altKey = `shared-analysis-${Date.now()}`;
+        localStorage.setItem(altKey, dataString);
+        console.log('✅ Dados salvos com chave alternativa:', altKey);
+        
+        // Log dos dados que estão sendo salvos
+        console.log('📊 Dados completos sendo salvos:', {
+          frameInfo: fullAnalysisData.frameInfo,
+          totalComponents: fullAnalysisData.components?.length || 0,
+          componentNames: fullAnalysisData.components?.slice(0, 3).map((c: any) => c.name) || [],
+          excludedComponents: fullAnalysisData.excludedComponents?.length || 0
+        });
+        
       } catch (error) {
-        console.warn('Não foi possível salvar dados completos no localStorage:', error);
+        console.error('❌ Erro ao salvar dados:', error);
+        this.showError('Erro ao salvar dados da análise');
+        return;
       }
       
-      // Criar URL com parâmetros básicos e ID para dados completos
+      // Criar URL com dados completos codificados como fallback
+      const encodedData = encodeURIComponent(btoa(dataString));
       const currentUrl = new URL(window.location.href);
-      const shareableUrl = `${currentUrl.origin}/view.html?shared=true&id=${analysisId}&connected=${connectedCount}&disconnected=${disconnectedCount}&compliance=${encodeURIComponent(complianceRate)}&status=${encodeURIComponent(complianceStatus)}&timestamp=${Date.now()}`;
+      const shareableUrl = `${currentUrl.origin}/view.html?shared=true&id=${analysisId}&data=${encodedData}&connected=${connectedCount}&disconnected=${disconnectedCount}&compliance=${encodeURIComponent(complianceRate)}&status=${encodeURIComponent(complianceStatus)}&timestamp=${Date.now()}`;
       
       // Copiar para clipboard
       navigator.clipboard.writeText(shareableUrl).then(() => {
@@ -436,8 +462,9 @@ export class UIManager {
         disconnected: disconnectedCount,
         compliance: complianceRate,
         status: complianceStatus,
-        url: shareableUrl,
-        fullDataSaved: true
+        url: shareableUrl.substring(0, 200) + '...',
+        fullDataSaved: true,
+        dataLength: dataString.length
       });
       
     } catch (error) {

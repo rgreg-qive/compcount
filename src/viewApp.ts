@@ -71,17 +71,35 @@ class ViewApp {
       const timestamp = urlParams.get('timestamp');
       
       if (!connected || !disconnected || !compliance || !status) {
+        console.log('❌ Parâmetros básicos da URL não encontrados');
         return null;
       }
 
-      // Tentar obter dados completos do localStorage ou sessionStorage
+      // 1. Tentar obter dados completos do localStorage ou sessionStorage
       const fullData = this.tryLoadFullAnalysisData(urlParams.get('id'));
       
       if (fullData) {
+        console.log('✅ Dados completos carregados do storage!');
         return fullData;
       }
 
-      // Criar dados básicos a partir dos parâmetros da URL
+      // 2. Tentar decodificar dados da URL (fallback)
+      const encodedData = urlParams.get('data');
+      if (encodedData) {
+        console.log('🔍 Tentando decodificar dados da URL...');
+        try {
+          const decodedData = atob(decodeURIComponent(encodedData));
+          const parsedData = JSON.parse(decodedData);
+          console.log('✅ Dados decodificados da URL com sucesso!');
+          console.log('📊 Componentes encontrados:', parsedData.components?.length || 0);
+          return parsedData;
+        } catch (error) {
+          console.error('❌ Erro ao decodificar dados da URL:', error);
+        }
+      }
+
+      // 3. Fallback: mostrar apenas os totais (sem componentes detalhados)
+      console.log('⚠️ Usando apenas dados básicos da URL');
       const connectedNum = parseInt(connected);
       const disconnectedNum = parseInt(disconnected);
       
@@ -96,7 +114,7 @@ class ViewApp {
           disconnected: disconnectedNum,
           total: connectedNum + disconnectedNum
         },
-        components: this.generateMockComponents(connectedNum, disconnectedNum),
+        components: [], // Sem componentes detalhados
         timestamp: timestamp ? parseInt(timestamp) : Date.now(),
         complianceRate: parseFloat(compliance.replace('%', '')),
         complianceStatus: decodeURIComponent(status),
@@ -104,7 +122,7 @@ class ViewApp {
       };
       
     } catch (error) {
-      console.error('Erro ao extrair dados da URL:', error);
+      console.error('❌ Erro ao extrair dados da URL:', error);
       return null;
     }
   }
