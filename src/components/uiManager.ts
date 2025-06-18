@@ -436,10 +436,59 @@ export class UIManager {
         return;
       }
       
-      // Criar URL com dados completos codificados como fallback
-      const encodedData = encodeURIComponent(btoa(dataString));
-      const currentUrl = new URL(window.location.href);
-      const shareableUrl = `${currentUrl.origin}/view.html?shared=true&id=${analysisId}&data=${encodedData}&connected=${connectedCount}&disconnected=${disconnectedCount}&compliance=${encodeURIComponent(complianceRate)}&status=${encodeURIComponent(complianceStatus)}&timestamp=${Date.now()}`;
+      // Criar dados compactos para a URL (apenas essenciais)
+      const compactData = {
+        frameInfo: fullAnalysisData.frameInfo,
+        components: fullAnalysisData.components.map((c: any) => ({
+          name: c.name,
+          type: c.type,
+          isConnectedToDS: c.isConnectedToDS,
+          nodeId: c.nodeId
+        })),
+        excludedComponents: fullAnalysisData.excludedComponents?.map((c: any) => ({
+          name: c.name,
+          type: c.type,
+          isConnectedToDS: c.isConnectedToDS,
+          nodeId: c.nodeId
+        })) || [],
+        summary: fullAnalysisData.summary,
+        complianceRate: fullAnalysisData.complianceRate,
+        complianceStatus: fullAnalysisData.complianceStatus,
+        timestamp: fullAnalysisData.timestamp
+      };
+      
+      const compactDataString = JSON.stringify(compactData);
+      console.log('📦 Dados compactos:', {
+        originalSize: dataString.length,
+        compactSize: compactDataString.length,
+        reduction: Math.round((1 - compactDataString.length / dataString.length) * 100) + '%'
+      });
+      
+      // Tentar criar URL com dados compactos
+      let shareableUrl = '';
+      let dataIncluded = false;
+      
+      try {
+        const encodedData = encodeURIComponent(btoa(compactDataString));
+        const currentUrl = new URL(window.location.href);
+        const testUrl = `${currentUrl.origin}/view.html?shared=true&id=${analysisId}&data=${encodedData}&connected=${connectedCount}&disconnected=${disconnectedCount}&compliance=${encodeURIComponent(complianceRate)}&status=${encodeURIComponent(complianceStatus)}&timestamp=${Date.now()}`;
+        
+        // Verificar se URL não é muito longa (limite ~2000 caracteres)
+        if (testUrl.length < 2000) {
+          shareableUrl = testUrl;
+          dataIncluded = true;
+          console.log('✅ URL com dados completos (tamanho:', testUrl.length, 'chars)');
+        } else {
+          console.log('⚠️ URL muito longa (', testUrl.length, 'chars), usando apenas localStorage');
+          shareableUrl = `${currentUrl.origin}/view.html?shared=true&id=${analysisId}&connected=${connectedCount}&disconnected=${disconnectedCount}&compliance=${encodeURIComponent(complianceRate)}&status=${encodeURIComponent(complianceStatus)}&timestamp=${Date.now()}`;
+          dataIncluded = false;
+        }
+      } catch (error) {
+        console.error('❌ Erro ao codificar dados:', error);
+        const currentUrl = new URL(window.location.href);
+        shareableUrl = `${currentUrl.origin}/view.html?shared=true&id=${analysisId}&connected=${connectedCount}&disconnected=${disconnectedCount}&compliance=${encodeURIComponent(complianceRate)}&status=${encodeURIComponent(complianceStatus)}&timestamp=${Date.now()}`;
+        dataIncluded = false;
+      }
       
       // Copiar para clipboard
       navigator.clipboard.writeText(shareableUrl).then(() => {
@@ -462,9 +511,10 @@ export class UIManager {
         disconnected: disconnectedCount,
         compliance: complianceRate,
         status: complianceStatus,
-        url: shareableUrl.substring(0, 200) + '...',
+        url: shareableUrl,
         fullDataSaved: true,
-        dataLength: dataString.length
+        dataIncluded: dataIncluded,
+        urlLength: shareableUrl.length
       });
       
     } catch (error) {
