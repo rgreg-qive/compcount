@@ -335,80 +335,58 @@ export class UIManager {
    * Configura as opções de relatório
    */
   private setupReportOptions(): void {
-    // PNG Export
+    // PNG Export (WIP)
     const pngBtn = document.getElementById('export-png');
     if (pngBtn) {
-      pngBtn.addEventListener('click', () => this.exportToPNG());
+      pngBtn.addEventListener('click', () => this.showWipMessage('PNG'));
     }
 
-    // PDF Export
+    // PDF Export (WIP)
     const pdfBtn = document.getElementById('export-pdf');
     if (pdfBtn) {
-      pdfBtn.addEventListener('click', () => this.exportToPDF());
+      pdfBtn.addEventListener('click', () => this.showWipMessage('PDF'));
     }
 
-    // Generate Link
+    // Generate Link (Funcional)
     const linkBtn = document.getElementById('generate-link');
     if (linkBtn) {
       linkBtn.addEventListener('click', () => this.generateShareableLink());
     }
 
-    // Checklist Export
+    // Checklist Export (WIP)
     const checklistBtn = document.getElementById('export-checklist');
     if (checklistBtn) {
-      checklistBtn.addEventListener('click', () => this.exportChecklist());
+      checklistBtn.addEventListener('click', () => this.showWipMessage('Checklist'));
     }
   }
 
+
+
   /**
-   * Exporta relatório como PNG
+   * Mostra mensagem para funcionalidades em desenvolvimento
    */
-  private async exportToPNG(): Promise<void> {
-    try {
-      this.showSuccess('🖼️ Preparando PNG...');
-      
-      // Implementação futura: captura de tela da análise
-      // Por enquanto, vamos mostrar uma mensagem
-      setTimeout(() => {
-        this.showSuccess('🖼️ Funcionalidade PNG em desenvolvimento!');
-      }, 1000);
-      
-    } catch (error) {
-      console.error('Erro ao exportar PNG:', error);
-      this.showError('Erro ao gerar PNG');
-    }
+  private showWipMessage(feature: string): void {
+    this.showError(`🚧 ${feature} em desenvolvimento! Use "Gerar Link" por enquanto.`);
   }
 
   /**
-   * Exporta relatório como PDF
-   */
-  private async exportToPDF(): Promise<void> {
-    try {
-      this.showSuccess('📄 Preparando PDF...');
-      
-      // Implementação futura: geração de PDF
-      setTimeout(() => {
-        this.showSuccess('📄 Funcionalidade PDF em desenvolvimento!');
-      }, 1000);
-      
-    } catch (error) {
-      console.error('Erro ao exportar PDF:', error);
-      this.showError('Erro ao gerar PDF');
-    }
-  }
-
-  /**
-   * Gera link compartilhável
+   * Gera link compartilhável com dados da análise atual
    */
   private generateShareableLink(): void {
     try {
-      // Criar URL com parâmetros da análise atual
+      // Coletar dados da análise atual
+      const connectedCount = document.getElementById('connected-count')?.textContent || '0';
+      const disconnectedCount = document.getElementById('disconnected-count')?.textContent || '0';
+      const complianceRate = document.getElementById('compliance-rate')?.textContent || '0%';
+      const complianceStatus = document.getElementById('compliance-status')?.textContent || '';
+      
+      // Criar URL com parâmetros da análise
       const currentUrl = new URL(window.location.href);
-      const shareableUrl = `${currentUrl.origin}${currentUrl.pathname}?shared=true&timestamp=${Date.now()}`;
+      const shareableUrl = `${currentUrl.origin}${currentUrl.pathname}?shared=true&connected=${connectedCount}&disconnected=${disconnectedCount}&compliance=${encodeURIComponent(complianceRate)}&status=${encodeURIComponent(complianceStatus)}&timestamp=${Date.now()}`;
       
       // Copiar para clipboard
       navigator.clipboard.writeText(shareableUrl).then(() => {
-        this.showSuccess('🔗 Link copiado para área de transferência!');
+        this.showSuccess('🔗 Link da análise copiado! Compartilhe com sua equipe.');
       }).catch(() => {
         // Fallback para navegadores sem clipboard API
         const textArea = document.createElement('textarea');
@@ -417,7 +395,16 @@ export class UIManager {
         textArea.select();
         document.execCommand('copy');
         document.body.removeChild(textArea);
-        this.showSuccess('🔗 Link copiado!');
+        this.showSuccess('🔗 Link da análise copiado!');
+      });
+      
+      // Log para debug
+      console.log('📊 Link gerado com dados:', {
+        connected: connectedCount,
+        disconnected: disconnectedCount,
+        compliance: complianceRate,
+        status: complianceStatus,
+        url: shareableUrl
       });
       
     } catch (error) {
@@ -426,61 +413,7 @@ export class UIManager {
     }
   }
 
-  /**
-   * Exporta checklist de ações
-   */
-  private exportChecklist(): void {
-    try {
-      // Coletar dados da análise atual
-      const connectedCount = document.getElementById('connected-count')?.textContent || '0';
-      const disconnectedCount = document.getElementById('disconnected-count')?.textContent || '0';
-      const complianceRate = document.getElementById('compliance-rate')?.textContent || '0%';
-      const complianceStatus = document.getElementById('compliance-status')?.textContent || '';
-      
-      // Criar checklist em texto
-      const checklist = `
-📋 CHECKLIST DE AÇÕES - ANÁLISE DE COMPONENTES
 
-📊 RESUMO DA ANÁLISE:
-✅ Componentes Conectados: ${connectedCount}
-❌ Componentes Desconectados: ${disconnectedCount}
-📈 Taxa de Conformidade: ${complianceRate} (${complianceStatus})
-
-🎯 AÇÕES RECOMENDADAS:
-${parseInt(disconnectedCount) > 0 ? `
-□ Conectar ${disconnectedCount} componente(s) ao Design System
-□ Revisar elementos desconectados na tabela
-□ Atualizar instâncias para usar componentes oficiais
-` : '□ Manter componentes já conectados atualizados'}
-
-💡 PRÓXIMOS PASSOS:
-□ Implementar correções identificadas
-□ Validar mudanças no Figma
-□ Executar nova análise para verificar melhorias
-□ Documentar padrões encontrados
-
-📅 Data da Análise: ${new Date().toLocaleDateString('pt-BR')}
-🕒 Hora: ${new Date().toLocaleTimeString('pt-BR')}
-      `.trim();
-
-      // Download como arquivo de texto
-      const blob = new Blob([checklist], { type: 'text/plain;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `checklist-componentes-${new Date().toISOString().split('T')[0]}.txt`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      this.showSuccess('📋 Checklist baixado com sucesso!');
-      
-    } catch (error) {
-      console.error('Erro ao exportar checklist:', error);
-      this.showError('Erro ao gerar checklist');
-    }
-  }
 
   /**
    * Mostra/esconde botão de feedback
