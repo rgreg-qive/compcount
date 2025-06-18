@@ -389,11 +389,15 @@ export class UIManager {
       // Criar ID único para esta análise
       const analysisId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
+      // Coletar componentes excluídos (toggles desabilitados)
+      const excludedComponents = this.getExcludedComponents();
+      
       // Preparar dados completos da análise
       const fullAnalysisData = {
         frameInfo: this.currentAnalysisResult.frameInfo,
         summary: this.currentAnalysisResult.summary,
         components: this.currentAnalysisResult.components,
+        excludedComponents: excludedComponents,
         timestamp: Date.now(),
         complianceRate: parseFloat(complianceRate.replace('%', '')),
         complianceStatus: complianceStatus,
@@ -450,6 +454,35 @@ export class UIManager {
   }
 
   private currentAnalysisResult: any = null;
+
+  /**
+   * Obtém componentes que foram excluídos da análise (toggles desabilitados)
+   */
+  private getExcludedComponents(): ComponentAnalysis[] {
+    const excludedComponents: ComponentAnalysis[] = [];
+    
+    if (!this.currentAnalysisResult) return excludedComponents;
+    
+    try {
+      const toggles = document.querySelectorAll('.component-toggle') as NodeListOf<HTMLInputElement>;
+      
+      toggles.forEach(toggle => {
+        if (!toggle.checked) {
+          // Encontrar o componente correspondente
+          const nodeId = toggle.dataset.nodeId;
+          const component = this.currentAnalysisResult.components.find((c: ComponentAnalysis) => c.nodeId === nodeId);
+          
+          if (component) {
+            excludedComponents.push(component);
+          }
+        }
+      });
+    } catch (error) {
+      console.warn('Erro ao coletar componentes excluídos:', error);
+    }
+    
+    return excludedComponents;
+  }
 
 
 

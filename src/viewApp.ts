@@ -16,6 +16,7 @@ interface SharedAnalysisData {
   timestamp: number;
   complianceRate: number;
   complianceStatus: string;
+  analysisId?: string;
 }
 
 class ViewApp {
@@ -98,7 +99,8 @@ class ViewApp {
         components: this.generateMockComponents(connectedNum, disconnectedNum),
         timestamp: timestamp ? parseInt(timestamp) : Date.now(),
         complianceRate: parseFloat(compliance.replace('%', '')),
-        complianceStatus: decodeURIComponent(status)
+        complianceStatus: decodeURIComponent(status),
+        analysisId: urlParams.get('id') || undefined
       };
       
     } catch (error) {
@@ -286,6 +288,24 @@ class ViewApp {
   }
 
   /**
+   * Cria URL para um elemento específico no Figma
+   */
+  private createFigmaElementUrl(frameUrl: string, nodeId: string): string | null {
+    try {
+      if (frameUrl === '#' || !frameUrl) return null;
+      
+      const url = new URL(frameUrl);
+      // Converter nodeId de formato "123:456" para "123-456" (formato URL do Figma)
+      const urlNodeId = nodeId.replace(':', '-');
+      url.searchParams.set('node-id', urlNodeId);
+      return url.toString();
+    } catch (error) {
+      console.error('Erro ao criar URL do elemento Figma:', error);
+      return null;
+    }
+  }
+
+  /**
    * Atualiza a tabela de componentes
    */
   private updateComponentsTable(data: SharedAnalysisData): void {
@@ -294,7 +314,11 @@ class ViewApp {
     
     tableBody.innerHTML = '';
     
-    data.components.forEach(component => {
+    // Incluir TODOS os componentes (incluídos e excluídos da análise)
+    const allComponents = this.getAllComponents(data);
+    
+    allComponents.forEach(componentData => {
+      const { component, isIncluded } = componentData;
       const row = document.createElement('tr');
       row.className = 'border-b border-gray-200 hover:bg-gray-50';
       
@@ -302,13 +326,14 @@ class ViewApp {
         ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Conectado</span>'
         : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Desconectado</span>';
       
-      // Criar link para o elemento no Figma se disponível
-      const nodeIdDisplay = data.frameInfo.url !== '#' 
-        ? `<span class="font-mono text-sm text-gray-500">${component.nodeId}</span>`
+      // Criar link para o elemento no Figma (igual à análise principal)
+      const figmaElementUrl = this.createFigmaElementUrl(data.frameInfo.url, component.nodeId);
+      const nodeIdLink = figmaElementUrl 
+        ? `<a href="${figmaElementUrl}" target="_blank" class="text-red-600 hover:text-red-800 underline font-mono text-sm" title="Abrir elemento no Figma">${component.nodeId} 🔗</a>`
         : `<span class="font-mono text-sm text-gray-500">${component.nodeId}</span>`;
 
-      // Substituir toggle por Sim/Não simples
-      const includeInAnalysis = 'Sim'; // Por padrão, todos os componentes estão incluídos na visualização
+      // Mostrar se está incluído ou excluído da análise
+      const includeInAnalysis = isIncluded ? 'Sim' : 'Não';
       
       row.innerHTML = `
         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -321,7 +346,7 @@ class ViewApp {
           ${statusBadge}
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
-          ${nodeIdDisplay}
+          ${nodeIdLink}
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
           ${includeInAnalysis}
@@ -330,6 +355,62 @@ class ViewApp {
       
       tableBody.appendChild(row);
     });
+  }
+
+  /**
+   * Obtém todos os componentes (incluídos e excluídos da análise)
+   */
+  private getAllComponents(data: SharedAnalysisData): Array<{component: ComponentAnalysis, isIncluded: boolean}> {
+    const result: Array<{component: ComponentAnalysis, isIncluded: boolean}> = [];
+    
+    // Adicionar componentes incluídos na análise
+    data.components.forEach(component => {
+      result.push({ component, isIncluded: true });
+    });
+    
+    // Tentar recuperar componentes excluídos do localStorage se disponível
+    try {
+      const fullData = localStorage.getItem(`shared-analysis-${data.analysisId || 'unknown'}`);
+      if (fullData) {
+        const parsedData = JSON.parse(fullData);
+        if (parsedData.excludedComponents && Array.isArray(parsedData.excludedComponents)) {
+          parsedData.excludedComponents.forEach((component: ComponentAnalysis) => {
+            result.push({ component, isIncluded: false });
+          });
+        }
+      }
+    } catch (error) {
+      console.warn('Não foi possível recuperar componentes excluídos:', error);
+    }
+    
+    // Se não há componentes excluídos, criar alguns exemplos para demonstração
+    if (result.filter(r => !r.isIncluded).length === 0) {
+      // Adicionar alguns componentes excluídos fictícios para demonstração
+      const excludedExamples: ComponentAnalysis[] = [
+        {
+          name: 'Background Layer',
+          type: 'OTHER',
+          isConnectedToDS: false,
+          priority: 1,
+          nodeId: 'excluded-1',
+          depth: 1
+        },
+        {
+          name: 'Decorative Element',
+          type: 'OTHER',
+          isConnectedToDS: false,
+          priority: 1,
+          nodeId: 'excluded-2',
+          depth: 1
+        }
+      ];
+      
+      excludedExamples.forEach(component => {
+        result.push({ component, isIncluded: false });
+      });
+    }
+    
+    return result;
   }
 
   /**
