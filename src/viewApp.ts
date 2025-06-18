@@ -32,28 +32,44 @@ class ViewApp {
    */
   private async init(): Promise<void> {
     try {
+      console.log('🚀 Iniciando ViewApp...');
+      
       // Verificar se é um link compartilhado
       const urlParams = new URLSearchParams(window.location.search);
+      console.log('🔍 Parâmetros da URL:', Object.fromEntries(urlParams.entries()));
+      
       const isShared = urlParams.get('shared') === 'true';
       
       if (!isShared) {
+        console.log('❌ Não é um link compartilhado válido');
         this.showError('Este link não é uma análise compartilhada válida.');
         return;
       }
+
+      console.log('✅ Link compartilhado válido detectado');
 
       // Tentar carregar dados da URL
       const analysisData = this.extractAnalysisFromUrl(urlParams);
       
       if (!analysisData) {
+        console.log('❌ Nenhum dado de análise encontrado');
         this.showError('Dados da análise não encontrados no link.');
         return;
       }
+
+      console.log('✅ Dados da análise carregados com sucesso!');
+      console.log('📊 Resumo dos dados:', {
+        frameInfo: analysisData.frameInfo?.name || 'N/A',
+        totalComponents: analysisData.components?.length || 0,
+        connected: analysisData.summary?.connected || 0,
+        disconnected: analysisData.summary?.disconnected || 0
+      });
 
       // Exibir a análise
       this.displayAnalysis(analysisData);
       
     } catch (error) {
-      console.error('Erro ao inicializar visualização:', error);
+      console.error('❌ Erro ao inicializar visualização:', error);
       this.showError('Erro ao carregar análise compartilhada.');
     }
   }

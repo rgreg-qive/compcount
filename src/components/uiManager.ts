@@ -464,30 +464,26 @@ export class UIManager {
         reduction: Math.round((1 - compactDataString.length / dataString.length) * 100) + '%'
       });
       
-      // Tentar criar URL com dados compactos
+      // SEMPRE incluir dados na URL (prioridade máxima para funcionamento)
       let shareableUrl = '';
       let dataIncluded = false;
       
       try {
         const encodedData = encodeURIComponent(btoa(compactDataString));
         const currentUrl = new URL(window.location.href);
-        const testUrl = `${currentUrl.origin}/view.html?shared=true&id=${analysisId}&data=${encodedData}&connected=${connectedCount}&disconnected=${disconnectedCount}&compliance=${encodeURIComponent(complianceRate)}&status=${encodeURIComponent(complianceStatus)}&timestamp=${Date.now()}`;
+        shareableUrl = `${currentUrl.origin}/view.html?shared=true&id=${analysisId}&data=${encodedData}&connected=${connectedCount}&disconnected=${disconnectedCount}&compliance=${encodeURIComponent(complianceRate)}&status=${encodeURIComponent(complianceStatus)}&timestamp=${Date.now()}`;
+        dataIncluded = true;
         
-        // Verificar se URL não é muito longa (limite ~2000 caracteres)
-        if (testUrl.length < 2000) {
-          shareableUrl = testUrl;
-          dataIncluded = true;
-          console.log('✅ URL com dados completos (tamanho:', testUrl.length, 'chars)');
-        } else {
-          console.log('⚠️ URL muito longa (', testUrl.length, 'chars), usando apenas localStorage');
-          shareableUrl = `${currentUrl.origin}/view.html?shared=true&id=${analysisId}&connected=${connectedCount}&disconnected=${disconnectedCount}&compliance=${encodeURIComponent(complianceRate)}&status=${encodeURIComponent(complianceStatus)}&timestamp=${Date.now()}`;
-          dataIncluded = false;
-        }
+        console.log('✅ URL com dados completos criada (tamanho:', shareableUrl.length, 'chars)');
+        console.log('🔗 URL preview:', shareableUrl.substring(0, 150) + '...');
+        
       } catch (error) {
         console.error('❌ Erro ao codificar dados:', error);
+        // Fallback sem dados codificados
         const currentUrl = new URL(window.location.href);
         shareableUrl = `${currentUrl.origin}/view.html?shared=true&id=${analysisId}&connected=${connectedCount}&disconnected=${disconnectedCount}&compliance=${encodeURIComponent(complianceRate)}&status=${encodeURIComponent(complianceStatus)}&timestamp=${Date.now()}`;
         dataIncluded = false;
+        console.log('⚠️ Fallback: URL sem dados codificados');
       }
       
       // Copiar para clipboard
