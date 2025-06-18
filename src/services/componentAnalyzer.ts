@@ -245,15 +245,18 @@ export class ComponentAnalyzer {
     
     const nameMatches = componentLikeNames.some(pattern => pattern.test(node.name));
     
-    // Para TEXT, também verificar se não é filho direto de INSTANCE (evitar textos internos)
+    // Para TEXT, lógica específica mais permissiva
     if (node.type === 'TEXT') {
+      console.log(`🔍 Analisando TEXT "${node.name}": depth=${depth}, nameMatches=${nameMatches}`);
+      
       // Se o nome contém padrões típicos de componente de texto, incluir
       const textComponentPatterns = [
         /component/i, /element/i, /widget/i, /label/i, /title/i, /heading/i,
-        /text component/i, /text element/i, /standalone/i, /independent/i
+        /text component/i, /text element/i, /standalone/i, /independent/i, /teste/i, /capa/i
       ];
       
       const isTextComponent = textComponentPatterns.some(pattern => pattern.test(node.name));
+      console.log(`🔍 isTextComponent: ${isTextComponent} para "${node.name}"`);
       
       // Incluir se parece ser um componente de texto independente
       if (isTextComponent || nameMatches) {
@@ -261,12 +264,25 @@ export class ComponentAnalyzer {
         return true;
       }
       
-      // Incluir textos que não são filhos diretos de INSTANCE e têm nomes significativos
-      if (depth <= 2 && !node.name.toLowerCase().includes('texto do')) {
-        console.log(`📝 Detectado texto independente: "${node.name}" (depth: ${depth})`);
-        return true;
+      // MAIS PERMISSIVO: Incluir a maioria dos textos que não são obviamente decorativos
+      if (depth <= 3) {
+        // Excluir apenas textos claramente decorativos
+        const excludePatterns = [
+          /^texto do/i, /^label$/i, /^text$/i, /placeholder/i, 
+          /lorem ipsum/i, /sample text/i, /example/i
+        ];
+        
+        const shouldExclude = excludePatterns.some(pattern => pattern.test(node.name));
+        
+        if (!shouldExclude) {
+          console.log(`📝 Detectado texto independente: "${node.name}" (depth: ${depth}) - sendo mais permissivo`);
+          return true;
+        } else {
+          console.log(`🚫 Texto excluído por ser decorativo: "${node.name}"`);
+        }
       }
       
+      console.log(`🚫 Texto não incluído: "${node.name}" (depth: ${depth})`);
       return false;
     }
     
