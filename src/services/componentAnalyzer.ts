@@ -156,12 +156,21 @@ export class ComponentAnalyzer {
         depth
       });
     }
+    
+    // DEBUG: Log para elementos TEXT que não foram incluídos
+    else if (node.type === 'TEXT') {
+      console.log(`🚫 Elemento TEXT NÃO incluído: "${node.name}" (depth: ${depth})`);
+      console.log(`   - shouldInclude: ${ruleResult.shouldInclude}`);
+      console.log(`   - shouldIncludeAsDisconnected: ${this.shouldIncludeAsDisconnectedComponent(node, depth)}`);
+      console.log(`   - absoluteBoundingBox:`, node.absoluteBoundingBox);
+    }
 
     // Para outros tipos, processar filhos recursivamente
     if (node.children) {
       node.children.forEach(child => {
-        // Pular TEXT nodes que são filhos de INSTANCE
+        // Pular TEXT nodes que são filhos de INSTANCE (para evitar textos internos de botões)
         if (child.type === 'TEXT' && node.type === 'INSTANCE') {
+          console.log(`🚫 Pulando TEXT "${child.name}" que é filho de INSTANCE "${node.name}"`);
           return;
         }
         
@@ -174,15 +183,26 @@ export class ComponentAnalyzer {
    * Filtra componentes relevantes para a análise
    */
   private static filterRelevantComponents(components: ComponentAnalysis[]): ComponentAnalysis[] {
-    return components.filter(component => {
+    console.log(`🔍 Filtrando componentes: ${components.length} componentes antes da filtragem`);
+    
+    const filtered = components.filter(component => {
       // Incluir INSTANCE e COMPONENT sempre
       if (component.type === 'INSTANCE' || component.type === 'COMPONENT') {
         return true;
       }
       
-      // Para OTHER, incluir apenas se foi especificamente incluído por regras
-      return component.type === 'OTHER';
+      // Para OTHER, incluir sempre (mudança para garantir que TEXT seja incluído)
+      if (component.type === 'OTHER') {
+        console.log(`✅ Incluindo componente OTHER: "${component.name}"`);
+        return true;
+      }
+      
+      console.log(`❌ Excluindo componente: "${component.name}" (tipo: ${component.type})`);
+      return false;
     });
+    
+    console.log(`📊 Filtragem concluída: ${filtered.length} componentes após filtragem`);
+    return filtered;
   }
 
   /**
