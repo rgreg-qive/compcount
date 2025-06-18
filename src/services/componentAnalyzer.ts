@@ -193,16 +193,23 @@ export class ComponentAnalyzer {
     if (depth > 4) return false;
     
     // Incluir elementos com nomes significativos que parecem ser componentes
-    const significantTypes = ['RECTANGLE', 'ELLIPSE', 'VECTOR', 'FRAME', 'GROUP'];
+    const significantTypes = ['RECTANGLE', 'ELLIPSE', 'VECTOR', 'FRAME', 'GROUP', 'TEXT'];
     if (!significantTypes.includes(node.type)) return false;
     
-    // Verificar se tem tamanho significativo
+    // Verificar se tem tamanho significativo (critérios mais flexíveis para TEXT)
     if (node.absoluteBoundingBox) {
       const { width, height } = node.absoluteBoundingBox;
-      // Muito pequeno = provavelmente decorativo
-      if (width < 20 || height < 20) return false;
-      // Muito grande = provavelmente container
-      if (width > 500 || height > 500) return false;
+      
+      if (node.type === 'TEXT') {
+        // Para TEXT, critérios mais flexíveis
+        if (width < 10 || height < 10) return false;
+        // TEXT pode ser maior, então limite mais alto
+        if (width > 800 || height > 200) return false;
+      } else {
+        // Para outros tipos, critérios originais
+        if (width < 20 || height < 20) return false;
+        if (width > 500 || height > 500) return false;
+      }
     }
     
     // Incluir se o nome sugere que é um componente
@@ -212,10 +219,36 @@ export class ComponentAnalyzer {
       /icon/i, /avatar/i, /badge/i, /chip/i, /tag/i,
       /header/i, /footer/i, /sidebar/i, /menu/i, /nav/i,
       /component/i, /element/i, /widget/i,
-      /rectangle \d+/i, /ellipse \d+/i, /vector \d+/i // Elementos numerados como Rectangle 6190
+      /text/i, /label/i, /title/i, /heading/i, /caption/i, // Padrões de texto
+      /rectangle \d+/i, /ellipse \d+/i, /vector \d+/i, /text \d+/i // Elementos numerados
     ];
     
     const nameMatches = componentLikeNames.some(pattern => pattern.test(node.name));
+    
+    // Para TEXT, também verificar se não é filho direto de INSTANCE (evitar textos internos)
+    if (node.type === 'TEXT') {
+      // Se o nome contém padrões típicos de componente de texto, incluir
+      const textComponentPatterns = [
+        /component/i, /element/i, /widget/i, /label/i, /title/i, /heading/i,
+        /text component/i, /text element/i, /standalone/i, /independent/i
+      ];
+      
+      const isTextComponent = textComponentPatterns.some(pattern => pattern.test(node.name));
+      
+      // Incluir se parece ser um componente de texto independente
+      if (isTextComponent || nameMatches) {
+        console.log(`📝 Detectado componente de texto: "${node.name}"`);
+        return true;
+      }
+      
+      // Incluir textos que não são filhos diretos de INSTANCE e têm nomes significativos
+      if (depth <= 2 && !node.name.toLowerCase().includes('texto do')) {
+        console.log(`📝 Detectado texto independente: "${node.name}" (depth: ${depth})`);
+        return true;
+      }
+      
+      return false;
+    }
     
     // Incluir se tem filhos (pode ser um componente complexo)
     const hasChildren = !!(node.children && node.children.length > 0);
