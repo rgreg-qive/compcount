@@ -113,59 +113,55 @@ class ViewApp {
    * Tenta carregar dados completos da análise
    */
   private tryLoadFullAnalysisData(id: string | null): SharedAnalysisData | null {
-    if (!id) return null;
+    if (!id) {
+      console.log('🔍 Nenhum ID fornecido para buscar dados completos');
+      return null;
+    }
     
     try {
       // Tentar localStorage primeiro
-      const stored = localStorage.getItem(`shared-analysis-${id}`);
+      const storageKey = `shared-analysis-${id}`;
+      console.log('🔍 Tentando carregar dados do localStorage com chave:', storageKey);
+      
+      const stored = localStorage.getItem(storageKey);
       if (stored) {
-        return JSON.parse(stored);
+        console.log('✅ Dados encontrados no localStorage!');
+        const parsedData = JSON.parse(stored);
+        console.log('📊 Dados carregados:', {
+          components: parsedData.components?.length || 0,
+          excludedComponents: parsedData.excludedComponents?.length || 0,
+          frameInfo: parsedData.frameInfo?.name || 'N/A'
+        });
+        return parsedData;
+      } else {
+        console.log('❌ Nenhum dado encontrado no localStorage');
       }
       
       // Tentar sessionStorage
-      const sessionStored = sessionStorage.getItem(`shared-analysis-${id}`);
+      const sessionStored = sessionStorage.getItem(storageKey);
       if (sessionStored) {
+        console.log('✅ Dados encontrados no sessionStorage!');
         return JSON.parse(sessionStored);
+      } else {
+        console.log('❌ Nenhum dado encontrado no sessionStorage');
       }
+      
+      // Debug: listar todas as chaves do localStorage
+      console.log('🔍 Chaves disponíveis no localStorage:', Object.keys(localStorage));
       
       return null;
     } catch (error) {
-      console.error('Erro ao carregar dados completos:', error);
+      console.error('❌ Erro ao carregar dados completos:', error);
       return null;
     }
   }
 
   /**
-   * Gera componentes mock para exibição básica
+   * Gera componentes mock para exibição básica (APENAS quando não há dados reais)
    */
   private generateMockComponents(connected: number, disconnected: number): ComponentAnalysis[] {
-    const components: ComponentAnalysis[] = [];
-    
-    // Componentes conectados
-    for (let i = 0; i < connected; i++) {
-      components.push({
-        name: `Componente Conectado ${i + 1}`,
-        type: 'INSTANCE',
-        isConnectedToDS: true,
-        priority: 3,
-        nodeId: `connected-${i}`,
-        depth: 1
-      });
-    }
-    
-    // Componentes desconectados
-    for (let i = 0; i < disconnected; i++) {
-      components.push({
-        name: `Componente Desconectado ${i + 1}`,
-        type: 'OTHER',
-        isConnectedToDS: false,
-        priority: 2,
-        nodeId: `disconnected-${i}`,
-        depth: 1
-      });
-    }
-    
-    return components;
+    // Se não há dados reais, mostrar mensagem informativa em vez de componentes fictícios
+    return [];
   }
 
   /**
@@ -316,6 +312,25 @@ class ViewApp {
     
     // Incluir TODOS os componentes (incluídos e excluídos da análise)
     const allComponents = this.getAllComponents(data);
+    
+    // Se não há componentes reais, mostrar mensagem informativa
+    if (allComponents.length === 0) {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td colspan="5" class="px-6 py-8 text-center">
+          <div class="text-gray-500">
+            <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <h3 class="text-sm font-medium text-gray-900 mb-1">Dados detalhados não disponíveis</h3>
+            <p class="text-sm text-gray-500">Esta análise foi compartilhada apenas com os totais.</p>
+            <p class="text-xs text-gray-400 mt-2">Para ver os componentes detalhados, gere um novo link após fazer a análise.</p>
+          </div>
+        </td>
+      `;
+      tableBody.appendChild(row);
+      return;
+    }
     
     allComponents.forEach(componentData => {
       const { component, isIncluded } = componentData;
