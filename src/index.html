@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise de Componentes - Design System Qive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="./main.ts"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg width="138" height="40" viewBox="0 0 138 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-8 w-auto">
+                            <path d="M61.5494 39.4315H54.6783V13.5861H61.5494V39.4315Z" fill="#100F0D"/>
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M41.9537 39.4315H48.8248V0H41.9537V16.9352C39.7033 14.4777 36.5342 12.9492 32.8821 12.9492C25.5642 12.9492 20.1629 19.1552 20.1629 26.4983V26.593C20.1629 33.9834 25.5206 40 32.7949 40C36.4836 40 39.6853 38.4473 41.9537 35.9607V39.4315ZM33.884 34.1914C29.846 34.1914 26.8719 30.7587 26.8719 26.5422V26.4881C26.8719 22.2986 29.8702 18.7578 33.9324 18.7578C37.9704 18.7578 40.9445 22.2175 40.9445 26.434V26.4881C40.9445 30.7046 37.9462 34.1914 33.884 34.1914Z" fill="#100F0D"/>
+                            <path d="M84.3502 13.5861L78.6489 30.9224L72.6694 13.5861H65.4283L75.4179 39.4315H82.0246L91.4326 13.5861H84.3502Z" fill="#100F0D"/>
+                            <path d="M99.8312 20.1933C100.975 18.9958 102.518 18.3961 104.456 18.3961C106.64 18.3961 108.252 19.0924 109.292 20.484C109.903 21.3008 110.332 22.262 110.584 23.3638H98.2537C98.4863 22.109 99.011 21.0512 99.8312 20.1933ZM111.317 30.9521C110.636 31.9028 109.847 32.7033 108.948 33.3537C107.927 34.094 106.517 34.4641 104.72 34.4641C102.64 34.4641 101.02 33.8654 99.8574 32.667C98.847 31.6254 98.2757 30.251 98.1443 28.5438H117.141C117.211 28.298 117.255 27.9891 117.273 27.619C117.29 27.2488 117.3 26.871 117.3 26.4827C117.3 23.8755 116.771 21.559 115.714 19.5324C114.656 17.5067 113.168 15.9113 111.247 14.7493C109.327 13.5863 107.063 13.0048 104.456 13.0048C101.884 13.0048 99.637 13.5777 97.7174 14.7225C95.7962 15.8683 94.2989 17.4541 93.2245 19.4798C92.1493 21.5064 91.6125 23.8583 91.6125 26.5353C91.6125 29.2497 92.1493 31.6092 93.2245 33.6177C94.2989 35.6262 95.7962 37.1861 97.7174 38.2955C99.637 39.4059 101.884 39.9607 104.456 39.9607C107.275 39.9607 109.68 39.3878 111.67 38.2429C113.522 37.1775 115.016 35.6778 116.151 33.7429L111.317 30.9521Z" fill="#100F0D"/>
+                            <path d="M8.12339 40L0 26.474L8.36386 26.4746L16.4472 40H8.12339Z" fill="#EF3923"/>
+                            <path d="M8.12339 12.9492L0 26.474L8.36386 26.4746L16.4472 12.9492H8.12339Z" fill="#EF3923"/>
+                            <path d="M129.339 40L137.462 26.4746H129.099L121.015 40H129.339Z" fill="#EF3923"/>
+                            <path d="M129.339 12.9492L137.462 26.4746H129.099L121.015 12.9492H129.339Z" fill="#EF3923"/>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h1 class="text-xl font-semibold text-gray-900">Análise de Componentes</h1>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        v1.0.0
+                    </span>
+                    <button 
+                        id="logout-btn"
+                        class="text-sm text-gray-600 hover:text-gray-900 flex items-center"
+                        title="Sair"
+                    >
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                        </svg>
+                        Sair
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <!-- Login Screen -->
+    <div id="login-screen" class="fixed inset-0 bg-gray-50 flex items-center justify-center z-50">
+        <div class="max-w-md w-full space-y-8 p-8">
+            <div class="text-center">
+                <div class="flex justify-center mb-4">
+                    <svg class="w-16 h-16 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                </div>
+                <h2 class="text-3xl font-bold text-gray-900">Análise de Componentes</h2>
+                <p class="mt-2 text-sm text-gray-600">Faça login para acessar a ferramenta</p>
+            </div>
+            <form class="mt-8 space-y-6" id="login-form">
+                <div class="space-y-4">
+                    <div>
+                        <label for="login-email" class="block text-sm font-medium text-gray-700">Email</label>
+                        <input 
+                            id="login-email" 
+                            name="email" 
+                            type="email" 
+                            required 
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
+                            placeholder="seu@email.com"
+                        >
+                    </div>
+                    <div>
+                        <label for="login-password" class="block text-sm font-medium text-gray-700">Senha</label>
+                        <input 
+                            id="login-password" 
+                            name="password" 
+                            type="password" 
+                            required 
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
+                            placeholder="Sua senha"
+                        >
+                    </div>
+                </div>
+                <div>
+                    <button 
+                        type="submit" 
+                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    >
+                        Entrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" id="main-app">
+        <!-- Figma Link Input Section -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Analisar Novo Frame do Figma</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="figma-token" class="block text-sm font-medium text-gray-700 mb-2">
+                        Token de Acesso do Figma
+                        <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <input 
+                            type="password" 
+                            id="figma-token" 
+                            name="figma-token"
+                            placeholder="figd_xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                            class="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                        >
+                        <button 
+                            type="button" 
+                            id="toggle-token-visibility"
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                        >
+                            <svg id="eye-icon" class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="mt-2 text-xs text-gray-500">
+                        <p>🔒 <strong>Seguro:</strong> O token é armazenado apenas localmente no seu navegador</p>
+                        <p>📋 <strong>Como obter:</strong> 
+                            <a href="https://www.figma.com/developers/api#access-tokens" target="_blank" class="text-red-600 hover:text-red-800 underline">
+                                Figma → Settings → Personal Access Tokens
+                            </a>
+                        </p>
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="figma-url" class="block text-sm font-medium text-gray-700 mb-2">
+                        Link do Frame do Figma
+                    </label>
+                    <div class="flex space-x-3">
+                        <input 
+                            type="url" 
+                            id="figma-url" 
+                            name="figma-url"
+                            placeholder="Cole aqui o link do frame para ser analisado" 
+                            class="flex-1 min-w-0 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                        >
+                        <button 
+                            onclick="analyzeFrame()"
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        >
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            Analisar
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="text-sm text-gray-600">
+                    <button 
+                        id="show-instructions" 
+                        class="text-red-600 hover:text-red-800 underline text-sm"
+                    >
+                        📋 Ver instruções detalhadas
+                    </button>
+                </div>
+                
+                <!-- Loading and Status Messages -->
+                <div id="analysis-status" class="hidden">
+                    <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="animate-spin h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-blue-800">Analisando frame...</h3>
+                                <p class="text-sm text-blue-700 mt-1">Extraindo componentes do Figma e comparando com o Design System.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div id="summary-cards" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 hidden">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 summary-card">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Componentes Conectados</p>
+                        <p class="text-2xl font-semibold text-gray-900 summary-value">0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 summary-card">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                            <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Componentes Desconectados</p>
+                        <p class="text-2xl font-semibold text-gray-900 summary-value">0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 summary-card">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Total Avaliados</p>
+                        <p class="text-2xl font-semibold text-gray-900 summary-value">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+
+
+        <!-- Charts and Analysis -->
+        <div id="charts-analysis" class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8 hidden">
+            <!-- Pie Chart -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Distribuição dos Componentes</h2>
+                <div class="relative h-64">
+                    <canvas id="components-chart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Analysis Summary -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">Resumo da Análise</h2>
+                    <!-- Dropdown Gerar Relatório -->
+                    <div class="relative hidden" id="report-dropdown">
+                        <button 
+                            id="generate-report-btn"
+                            class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                            aria-expanded="false"
+                            aria-haspopup="true"
+                        >
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Gerar Relatório
+                            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div 
+                            id="report-dropdown-menu"
+                            class="hidden absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10"
+                            role="menu"
+                            aria-orientation="vertical"
+                        >
+                            <div class="py-1" role="none">
+                                <button 
+                                    id="export-png"
+                                    class="group flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                                    role="menuitem"
+                                >
+                                    <svg class="w-4 h-4 mr-3 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                    Salvar como PNG
+                                </button>
+                                <button 
+                                    id="export-pdf"
+                                    class="group flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                                    role="menuitem"
+                                >
+                                    <svg class="w-4 h-4 mr-3 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                    Exportar PDF
+                                </button>
+                                <button 
+                                    id="generate-link"
+                                    class="group flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                                    role="menuitem"
+                                >
+                                    <svg class="w-4 h-4 mr-3 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                                    </svg>
+                                    Gerar Link
+                                </button>
+                                <button 
+                                    id="export-checklist"
+                                    class="group flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                                    role="menuitem"
+                                >
+                                    <svg class="w-4 h-4 mr-3 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                                    </svg>
+                                    Checklist Ação
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                            </div>
+                            <span class="ml-3 text-sm font-medium text-green-900">Conectados ao Design System</span>
+                        </div>
+                        <span class="text-sm font-semibold text-green-900" id="connected-count">0</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-2 h-2 bg-red-500 rounded-full"></div>
+                            </div>
+                            <span class="ml-3 text-sm font-medium text-red-900">Fora do Design System</span>
+                        </div>
+                        <span class="text-sm font-semibold text-red-900" id="disconnected-count">0</span>
+                    </div>
+                    
+                    <div class="pt-3 border-t border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-gray-700">Taxa de Conformidade</span>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-lg font-bold text-gray-900" id="compliance-rate">0%</span>
+                                <span id="compliance-status" class="hidden px-2 py-1 text-xs font-medium rounded-full"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Components Table -->
+        <div id="components-table" class="bg-white rounded-lg shadow-sm border border-gray-200 hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Detalhes dos Componentes</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Nome do Componente
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Tipo
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Status
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Node ID
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Incluir
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="components-table-body" class="bg-white divide-y divide-gray-200">
+                        <!-- Dados serão inseridos via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Feedback Section -->
+        <div class="mt-6 flex justify-center">
+            <button 
+                id="show-feedback-form"
+                class="hidden inline-flex items-center px-6 py-3 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                </svg>
+                                        Dar feedback sobre a análise feita
+            </button>
+        </div>
+    </main>
+
+    <!-- Modal de Instruções -->
+    <div id="instructions-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">📋 Instruções para Análise Completa</h3>
+                    <button id="close-instructions" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="space-y-4 text-sm text-gray-700">
+                    <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
+                        <h4 class="font-semibold text-blue-800 mb-2">🔑 Como obter o Token do Figma:</h4>
+                        <ol class="list-decimal list-inside space-y-1 text-blue-700">
+                            <li>Acesse <strong>Figma → Settings → Personal Access Tokens</strong></li>
+                            <li>Clique em <strong>"Create new token"</strong></li>
+                            <li>Dê um nome para o token (ex: "Análise de Componentes")</li>
+                            <li>Selecione a permissão <strong>"File content:read"</strong></li>
+                            <li>Copie o token gerado e cole no campo acima</li>
+                        </ol>
+                    </div>
+
+                    <div class="bg-green-50 border border-green-200 rounded-md p-4">
+                        <h4 class="font-semibold text-green-800 mb-2">🔗 Como obter o Link do Frame:</h4>
+                        <ol class="list-decimal list-inside space-y-1 text-green-700">
+                            <li>Abra o arquivo no Figma</li>
+                            <li>Selecione o frame que deseja analisar</li>
+                            <li>Clique com botão direito → <strong>"Copy link"</strong></li>
+                            <li>Cole o link completo no campo acima</li>
+                        </ol>
+                        <div class="mt-2 p-2 bg-white rounded border">
+                            <p class="text-xs text-gray-600"><strong>Exemplo de URL válida:</strong></p>
+                            <code class="text-xs text-gray-800">https://figma.com/design/ABC123/MeuArquivo?node-id=123-456</code>
+                        </div>
+                    </div>
+
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+                        <h4 class="font-semibold text-yellow-800 mb-2">🎓 Sistema de Aprendizado:</h4>
+                        <ul class="list-disc list-inside space-y-1 text-yellow-700">
+                            <li><span id="patterns-count-modal">Carregando...</span> padrões conhecidos salvos</li>
+                            <li>Usa padrões aprendidos para frames conhecidos</li>
+                            <li>Salva ajustes manuais para reutilização</li>
+                            <li>Melhora com o tempo conforme você corrige</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-gray-50 border border-gray-200 rounded-md p-4">
+                        <h4 class="font-semibold text-gray-800 mb-2">💡 Dicas:</h4>
+                        <ul class="list-disc list-inside space-y-1 text-gray-700">
+                            <li>Use os <strong>toggles</strong> na tabela para incluir/excluir componentes</li>
+                            <li>Dê <strong>feedback detalhado</strong> para melhorar futuras análises</li>
+                            <li>Clique nos <strong>Node IDs</strong> para ir direto ao elemento no Figma</li>
+                            <li>O sistema aprende com seus feedbacks e melhora automaticamente</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="flex justify-end mt-6">
+                    <button 
+                        id="close-instructions-btn"
+                        class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    >
+                        Entendi
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Drawer -->
+    <div id="feedback-drawer" class="fixed inset-0 overflow-hidden z-50 hidden">
+        <!-- Overlay -->
+        <div class="absolute inset-0 bg-gray-600 bg-opacity-50" id="feedback-overlay"></div>
+        
+        <!-- Drawer -->
+        <div class="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col" id="feedback-drawer-content">
+            <!-- Header -->
+            <div class="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
+                <h2 class="text-lg font-semibold text-gray-900">💬 Feedback Detalhado</h2>
+                <button id="close-feedback-drawer" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 overflow-y-auto p-6 min-h-0">
+                <div class="space-y-6">
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+                        <div class="flex">
+                            <svg class="h-5 w-5 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.742-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                            <div>
+                                <h3 class="text-sm font-medium text-yellow-800">Sistema de Aprendizado Inteligente</h3>
+                                <p class="text-sm text-yellow-700 mt-1">
+                                    Descreva o que estava errado na análise. O sistema criará regras automáticas para melhorar futuras análises.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="feedback-type" class="block text-sm font-medium text-gray-700 mb-2">
+                            Tipo do Problema
+                        </label>
+                        <select 
+                            id="feedback-type" 
+                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                        >
+                            <option value="">Selecione o tipo do problema...</option>
+                            <option value="missed_component">Componente não foi detectado</option>
+                            <option value="wrong_classification">Componente foi classificado incorretamente</option>
+                            <option value="should_ignore">Elemento deveria ser ignorado</option>
+                            <option value="other">Outro problema</option>
+                        </select>
+                    </div>
+
+                    <div id="component-name-field" class="hidden">
+                        <label for="component-name" class="block text-sm font-medium text-gray-700 mb-2">
+                            Nome do Componente
+                        </label>
+                        <input 
+                            type="text" 
+                            id="component-name" 
+                            placeholder="Ex: Rectangle 6190, Button Primary, etc."
+                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                        >
+                        <p class="mt-1 text-xs text-gray-500">Digite exatamente como aparece no Figma</p>
+                    </div>
+
+                    <div id="expected-classification-field" class="hidden">
+                        <label for="expected-classification" class="block text-sm font-medium text-gray-700 mb-2">
+                            Classificação Correta
+                        </label>
+                        <select 
+                            id="expected-classification" 
+                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                        >
+                            <option value="">Selecione a classificação correta...</option>
+                            <option value="connected">Conectado ao Design System</option>
+                            <option value="disconnected">Fora do Design System</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="feedback-description" class="block text-sm font-medium text-gray-700 mb-2">
+                            Descrição do Problema
+                        </label>
+                        <textarea 
+                            id="feedback-description" 
+                            rows="4"
+                            placeholder="Descreva detalhadamente o que estava errado. Ex: 'O Rectangle 6190 é um componente visual importante que deveria ser contado como desconectado do DS, mas não foi detectado na análise.'"
+                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                        ></textarea>
+                        <p class="mt-1 text-xs text-gray-500">Quanto mais detalhado, melhor o sistema aprenderá</p>
+                    </div>
+
+                    <!-- Suggested Components -->
+                    <div id="suggested-components" class="hidden">
+                        <h4 class="text-sm font-medium text-gray-700 mb-2">💡 Componentes Sugeridos</h4>
+                        <p class="text-xs text-gray-500 mb-3">Encontramos estes elementos que podem ter sido perdidos na análise:</p>
+                        <div id="suggestions-list" class="space-y-2">
+                            <!-- Sugestões serão inseridas aqui via JavaScript -->
+                        </div>
+                    </div>
+
+                    <div class="text-sm text-gray-500 p-3 bg-gray-50 rounded-md">
+                        <div class="flex items-center justify-between">
+                            <span id="learning-stats">Carregando estatísticas...</span>
+                            <button 
+                                id="export-learning-data"
+                                class="text-xs text-red-600 hover:text-red-800 font-medium underline"
+                                title="Exportar todos os dados para compartilhamento"
+                            >
+                                📤 Exportar dados
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="border-t border-gray-200 p-6 flex-shrink-0">
+                <div class="flex space-x-3">
+                    <button 
+                        id="cancel-feedback"
+                        class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    >
+                        Cancelar
+                    </button>
+                    <button 
+                        id="submit-feedback"
+                        class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    >
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Enviar Feedback
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

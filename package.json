@@ -1,0 +1,21 @@
+{
+  "name": "compcount-figma-analyzer",
+  "version": "1.0.0",
+  "description": "Ferramenta para análise de componentes Figma vs Design System",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -f componentes-analysis.html"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0"
+  },
+  "dependencies": {
+    "chart.js": "^4.4.0"
+  }
+} 
