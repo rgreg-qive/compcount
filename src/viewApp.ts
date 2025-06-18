@@ -296,35 +296,35 @@ class ViewApp {
     
     data.components.forEach(component => {
       const row = document.createElement('tr');
-      row.className = 'hover:bg-gray-50';
+      row.className = 'border-b border-gray-200 hover:bg-gray-50';
       
-      const statusClass = component.isConnectedToDS 
-        ? 'bg-green-100 text-green-800' 
-        : 'bg-red-100 text-red-800';
+      const statusBadge = component.isConnectedToDS 
+        ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Conectado</span>'
+        : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Desconectado</span>';
       
-      const statusText = component.isConnectedToDS 
-        ? 'Conectado' 
-        : 'Desconectado';
-      
-      const priorityStars = '★'.repeat(component.priority) + '☆'.repeat(5 - component.priority);
+      // Criar link para o elemento no Figma se disponível
+      const nodeIdDisplay = data.frameInfo.url !== '#' 
+        ? `<span class="font-mono text-sm text-gray-500">${component.nodeId}</span>`
+        : `<span class="font-mono text-sm text-gray-500">${component.nodeId}</span>`;
+
+      // Substituir toggle por Sim/Não simples
+      const includeInAnalysis = 'Sim'; // Por padrão, todos os componentes estão incluídos na visualização
       
       row.innerHTML = `
-        <td class="px-6 py-4 whitespace-nowrap">
-          <div class="text-sm font-medium text-gray-900">${component.name}</div>
-          <div class="text-sm text-gray-500">ID: ${component.nodeId}</div>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+          ${component.name}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          ${component.type}
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
-          <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-            ${component.type}
-          </span>
+          ${statusBadge}
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
-          <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
-            ${statusText}
-          </span>
+          ${nodeIdDisplay}
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-          <span title="Prioridade ${component.priority}/5">${priorityStars}</span>
+          ${includeInAnalysis}
         </td>
       `;
       
