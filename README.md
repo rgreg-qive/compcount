@@ -208,4 +208,75 @@ interface AnalysisRule {
 
 ## 📄 Licença
 
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes. 
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+## 📊 **Análise de Componentes do Figma**
+
+Ferramenta para analisar frames do Figma e identificar componentes conectados e desconectados do Design System.
+
+## 🚀 **Como Usar**
+
+1. **Obter Token do Figma:**
+   - Acesse: Figma → Settings → Personal Access Tokens
+   - Crie um token com permissão "File content:read"
+
+2. **Analisar Frame:**
+   - Cole o token no campo
+   - Cole o link do frame do Figma
+   - Clique em "Analisar Frame"
+
+3. **Visualizar Resultados:**
+   - Componentes conectados ao DS (verde)
+   - Componentes desconectados (vermelho)
+   - Elementos de texto detectados
+
+## 🆕 **Teste da Detecção de Texto Melhorada**
+
+### **Como Verificar se o Texto Está Sendo Detectado:**
+
+1. **Abra o DevTools do Navegador** (F12)
+2. **Vá para a aba Console**
+3. **Analise um frame com texto**
+4. **Procure por logs como:**
+
+```
+🔍 Analisando node: "Seu Texto Aqui" (TEXT) - componentId: null - depth: 2
+📝 Texto auto-detectado: "Seu Texto Aqui" (depth: 2)
+```
+
+### **Tipos de Texto que DEVEM Aparecer Agora:**
+- ✅ **Títulos e cabeçalhos** ("Capa", "Título Principal")
+- ✅ **Labels e legendas** ("Label do Campo") 
+- ✅ **Textos de botões** ("Clique Aqui")
+- ✅ **Conteúdo específico** ("Teste", "Demo", "Example")
+- ✅ **Textos numerados** ("Text 1", "Texto 2")
+- ✅ **Qualquer texto não obviamente decorativo**
+
+### **Se o Texto AINDA NÃO Aparecer:**
+
+1. **Verifique no Console:**
+   - Procure logs que começam com `🚫 Texto excluído`
+   - Veja o motivo da exclusão
+
+2. **Use o Feedback Detalhado:**
+   - Clique em "Dar Feedback Detalhado"
+   - Selecione "Componente não foi detectado"
+   - Digite o nome exato do texto
+   - Sistema criará regra automática
+
+3. **Verifique os Critérios:**
+   - Texto muito pequeno (< 5x5px)?
+   - Texto muito grande (> 1200x400px)?
+   - Muito profundo na hierarquia (depth > 6)?
+   - Nome exatamente "text", "label", "placeholder"?
+
+## ⭐ **Frame de Teste Específico**
+
+Para o frame: `https://www.figma.com/design/nJw4BJXRBFWJMSx0ib6dHx/Teste-Compcount?node-id=4-77`
+
+**Elementos que DEVEM ser detectados:**
+- Qualquer elemento TEXT visível
+- Retângulos e formas nomeadas
+- Componentes e instâncias
+
+**Se algo não aparecer, use o sistema de feedback!** 

@@ -15,59 +15,51 @@ export class UIManager {
   /**
    * Atualiza os cards de resumo
    */
-  updateSummaryCards(result: AnalysisResult): void {
+  updateSummaryCards(_result?: AnalysisResult): void {
+    // CORREÇÃO: Não usar os totais do result diretamente
+    // Aguardar configuração dos toggles e depois recalcular
+    
     const cards = document.querySelectorAll('.summary-card');
     
     if (cards.length >= 3) {
-      // Card de componentes conectados
+      // Inicializar com zeros - será atualizado após setupToggleListeners
       const connectedValue = cards[0].querySelector('.summary-value');
       if (connectedValue) {
-        connectedValue.textContent = result.summary.connected.toString();
+        connectedValue.textContent = '0';
       }
 
-      // Card de componentes desconectados  
       const disconnectedValue = cards[1].querySelector('.summary-value');
       if (disconnectedValue) {
-        disconnectedValue.textContent = result.summary.disconnected.toString();
+        disconnectedValue.textContent = '0';
       }
 
-      // Card do total
       const totalValue = cards[2].querySelector('.summary-value');
       if (totalValue) {
-        totalValue.textContent = result.summary.total.toString();
+        totalValue.textContent = '0';
       }
     }
 
-    // Atualizar também os elementos do resumo lateral
+    // Inicializar também os elementos do resumo lateral com zeros
     const connectedCount = document.getElementById('connected-count');
     if (connectedCount) {
-      connectedCount.textContent = result.summary.connected.toString();
+      connectedCount.textContent = '0';
     }
 
     const disconnectedCount = document.getElementById('disconnected-count');
     if (disconnectedCount) {
-      disconnectedCount.textContent = result.summary.disconnected.toString();
+      disconnectedCount.textContent = '0';
     }
 
     const complianceRate = document.getElementById('compliance-rate');
     const complianceStatus = document.getElementById('compliance-status');
     if (complianceRate && complianceStatus) {
-      const rate = result.summary.total > 0 
-        ? Math.round((result.summary.connected / result.summary.total) * 100)
-        : 0;
-      complianceRate.textContent = `${rate}%`;
-
-      // Atualizar tag de status baseado na taxa de conformidade
-      if (rate >= 80) {
-        complianceStatus.textContent = 'Aprovado';
-        complianceStatus.className = 'px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800';
-      } else {
-        complianceStatus.textContent = 'Revisar';
-        complianceStatus.className = 'px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800';
-      }
-      
+      complianceRate.textContent = '0%';
+      complianceStatus.textContent = 'Aguardando...';
+      complianceStatus.className = 'px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800';
       complianceStatus.classList.remove('hidden');
     }
+
+    console.log('📊 Cards de resumo inicializados com zeros - aguardando cálculo dos toggles');
   }
 
   /**
@@ -96,6 +88,13 @@ export class UIManager {
 
     // Configurar event listeners dos toggles
     this.setupToggleListeners();
+    
+    // CORREÇÃO: Recalcular estatísticas após configurar toggles
+    // Aguardar um pouco para garantir que os toggles estejam prontos
+    setTimeout(() => {
+      this.recalculateStats();
+      console.log('📊 Estatísticas recalculadas automaticamente após configurar toggles');
+    }, 100);
   }
 
   /**
@@ -110,8 +109,9 @@ export class UIManager {
       : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Desconectado</span>';
 
     // Criar toggle para incluir/excluir da análise
-    // Estado inicial baseado na importância: INSTANCE e COMPONENT ligados, outros desligados
-    const isImportantByDefault = component.type === 'INSTANCE' || component.type === 'COMPONENT';
+    // Estado inicial baseado na importância: INSTANCE, COMPONENT e elementos com nomes de DS
+    const hasDesignSystemName = this.hasDesignSystemLikeName(component.name);
+    const isImportantByDefault = component.type === 'INSTANCE' || component.type === 'COMPONENT' || hasDesignSystemName;
     const toggleId = `toggle-${component.nodeId.replace(':', '-')}`;
     const checkedAttribute = isImportantByDefault ? 'checked' : '';
     
@@ -123,7 +123,10 @@ export class UIManager {
     `;
     
     // Log do estado inicial para debug
-    console.log(`🔘 Toggle para "${component.name}" (${component.type}): ${isImportantByDefault ? 'LIGADO' : 'DESLIGADO'} por padrão`);
+    const reason = component.type === 'INSTANCE' ? 'INSTANCE' : 
+                   component.type === 'COMPONENT' ? 'COMPONENT' : 
+                   hasDesignSystemName ? 'NOME_DS' : 'OUTROS';
+    console.log(`🔘 Toggle para "${component.name}" (${component.type}): ${isImportantByDefault ? 'LIGADO' : 'DESLIGADO'} por padrão (motivo: ${reason})`);
 
     // Criar link direto para o elemento no Figma
     const figmaElementUrl = this.createFigmaElementUrl(frameUrl, component.nodeId);
@@ -151,8 +154,6 @@ export class UIManager {
 
     return row;
   }
-
-
 
   /**
    * Cria URL para um elemento específico no Figma
@@ -289,8 +290,6 @@ export class UIManager {
     console.log(`📊 Resumo da Análise atualizado: ${connected} conectados, ${disconnected} desconectados`);
   }
 
-
-
   /**
    * Mostra/esconde indicador de carregamento
    */
@@ -366,8 +365,6 @@ export class UIManager {
       checklistBtn.addEventListener('click', () => this.showWipMessage('Checklist'));
     }
   }
-
-
 
   /**
    * Mostra mensagem para funcionalidades em desenvolvimento
@@ -563,8 +560,6 @@ export class UIManager {
     
     return excludedComponents;
   }
-
-
 
   /**
    * Mostra/esconde botão de feedback
@@ -880,5 +875,65 @@ export class UIManager {
         snackbar.remove();
       }
     }, 300);
+  }
+
+  /**
+   * Verifica se o nome do elemento sugere que é um componente do Design System
+   */
+  private hasDesignSystemLikeName(name: string): boolean {
+    const designSystemPatterns = [
+      // Componentes básicos de interface
+      /button/i, /btn/i, /botao/i, /botão/i,
+      /card/i, /cartao/i, /cartão/i,
+      /modal/i, /popup/i, /dialog/i, /overlay/i,
+      /tooltip/i, /popover/i, /dropdown/i,
+      
+      // Componentes de formulário
+      /input/i, /field/i, /form/i, /campo/i,
+      /checkbox/i, /radio/i, /switch/i, /toggle/i,
+      /select/i, /option/i, /picker/i,
+      /textarea/i, /textfield/i,
+      
+      // Componentes de navegação
+      /menu/i, /nav/i, /navigation/i, /navbar/i,
+      /breadcrumb/i, /tab/i, /aba/i, /guia/i,
+      /sidebar/i, /drawer/i, /header/i, /footer/i,
+      
+      // Componentes de feedback
+      /alert/i, /notification/i, /toast/i, /snackbar/i,
+      /badge/i, /tag/i, /chip/i, /pill/i,
+      /loading/i, /spinner/i, /skeleton/i,
+      
+      // Componentes de mídia e conteúdo
+      /avatar/i, /profile/i, /image/i, /icon/i,
+      /list/i, /item/i, /grid/i, /table/i,
+      /accordion/i, /collapse/i, /panel/i,
+      
+      // Termos específicos de Design System
+      /component/i, /elemento/i, /widget/i,
+      /design.?system/i, /ds.?/i, /ui.?kit/i,
+      /template/i, /layout/i, /container/i,
+      
+      // Padrões de nomenclatura comuns
+      /^(base|primary|secondary)/i,
+      /\/(button|card|modal|input)/i, // Nomes com /
+      /button$/i, /card$/i, /modal$/i, // Terminam com tipo
+      
+      // Textos de componentes
+      /label/i, /title/i, /heading/i, /caption/i,
+      /link/i, /texto/i, /text/i,
+      
+      // Componentes específicos do projeto
+      /capa/i, /teste/i, /demo/i, /example/i
+    ];
+
+    const nameMatches = designSystemPatterns.some(pattern => pattern.test(name));
+    
+    if (nameMatches) {
+      console.log(`🎯 Nome "${name}" identificado como Design System - toggle será LIGADO por padrão`);
+      return true;
+    }
+    
+    return false;
   }
 } 

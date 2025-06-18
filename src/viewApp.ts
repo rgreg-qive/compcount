@@ -108,6 +108,19 @@ class ViewApp {
           const parsedData = JSON.parse(decodedData);
           console.log('✅ Dados decodificados da URL com sucesso!');
           console.log('📊 Componentes encontrados:', parsedData.components?.length || 0);
+          console.log('📊 Componentes excluídos:', parsedData.excludedComponents?.length || 0);
+          
+          // Armazenar os dados decodificados no localStorage para uso posterior
+          if (parsedData && urlParams.get('id')) {
+            const storageKey = `shared-analysis-${urlParams.get('id')}`;
+            try {
+              localStorage.setItem(storageKey, JSON.stringify(parsedData));
+              console.log('💾 Dados salvos no localStorage para uso futuro');
+            } catch (storageError) {
+              console.warn('⚠️ Não foi possível salvar no localStorage:', storageError);
+            }
+          }
+          
           return parsedData;
         } catch (error) {
           console.error('❌ Erro ao decodificar dados da URL:', error);
@@ -188,14 +201,6 @@ class ViewApp {
       console.error('❌ Erro ao carregar dados completos:', error);
       return null;
     }
-  }
-
-  /**
-   * Gera componentes mock para exibição básica (APENAS quando não há dados reais)
-   */
-  private generateMockComponents(connected: number, disconnected: number): ComponentAnalysis[] {
-    // Se não há dados reais, mostrar mensagem informativa em vez de componentes fictícios
-    return [];
   }
 
   /**
@@ -411,6 +416,7 @@ class ViewApp {
    */
   private getAllComponents(data: SharedAnalysisData): Array<{component: ComponentAnalysis, isIncluded: boolean}> {
     const result: Array<{component: ComponentAnalysis, isIncluded: boolean}> = [];
+    const seenNodeIds = new Set<string>(); // Para evitar duplicatas
     
     // Tentar recuperar dados completos do localStorage primeiro
     try {
@@ -421,19 +427,26 @@ class ViewApp {
         // Adicionar componentes incluídos na análise
         if (parsedData.components && Array.isArray(parsedData.components)) {
           parsedData.components.forEach((component: ComponentAnalysis) => {
-            result.push({ component, isIncluded: true });
+            if (!seenNodeIds.has(component.nodeId)) {
+              result.push({ component, isIncluded: true });
+              seenNodeIds.add(component.nodeId);
+            }
           });
         }
         
-        // Adicionar componentes excluídos da análise
+        // Adicionar componentes excluídos da análise (apenas se não foram vistos antes)
         if (parsedData.excludedComponents && Array.isArray(parsedData.excludedComponents)) {
           parsedData.excludedComponents.forEach((component: ComponentAnalysis) => {
-            result.push({ component, isIncluded: false });
+            if (!seenNodeIds.has(component.nodeId)) {
+              result.push({ component, isIncluded: false });
+              seenNodeIds.add(component.nodeId);
+            }
           });
         }
         
         // Se encontrou dados completos, retornar
         if (result.length > 0) {
+          console.log(`✅ Carregados ${result.length} componentes únicos do localStorage`);
           return result;
         }
       }
@@ -443,9 +456,13 @@ class ViewApp {
     
     // Fallback: usar apenas os componentes básicos da URL (sem componentes fictícios)
     data.components.forEach(component => {
-      result.push({ component, isIncluded: true });
+      if (!seenNodeIds.has(component.nodeId)) {
+        result.push({ component, isIncluded: true });
+        seenNodeIds.add(component.nodeId);
+      }
     });
     
+    console.log(`✅ Carregados ${result.length} componentes únicos da URL`);
     return result;
   }
 

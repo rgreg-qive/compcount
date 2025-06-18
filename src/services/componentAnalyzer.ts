@@ -126,10 +126,48 @@ export class ComponentAnalyzer {
       return;
     }
 
+    // MELHORIA: Detecção especial e mais inclusiva para elementos TEXT
+    if (node.type === 'TEXT') {
+      let shouldIncludeText = false;
+      let textClassification: 'connected' | 'disconnected' = 'disconnected';
+
+      // 1. Verificar se há regras específicas para este texto
+      if (ruleResult.shouldInclude) {
+        shouldIncludeText = true;
+        textClassification = ruleResult.classification || 'disconnected';
+        console.log(`✅ Texto incluído por regra aprendida: "${node.name}" → ${textClassification.toUpperCase()}`);
+      }
+      // 2. Auto-detecção mais permissiva para textos
+      else {
+        // Critérios mais flexíveis para textos
+        shouldIncludeText = this.shouldIncludeTextComponent(node, depth);
+        if (shouldIncludeText) {
+          // NOVA LÓGICA: Classificar baseado no uso de tokens
+          const isUsingTokens = this.isTextUsingDesignSystemTokens(node);
+          textClassification = isUsingTokens ? 'connected' : 'disconnected';
+          console.log(`📝 Texto auto-detectado: "${node.name}" (depth: ${depth}) → ${textClassification.toUpperCase()} (tokens: ${isUsingTokens})`);
+        }
+      }
+
+      if (shouldIncludeText) {
+        components.push({
+          name: node.name,
+          type: 'TEXT',
+          isConnectedToDS: textClassification === 'connected',
+          priority: this.calculatePriority(node),
+          nodeId: node.id,
+          depth
+        });
+        
+        // Para TEXT, não processar filhos (textos não têm filhos relevantes)
+        return;
+      }
+    }
+
     // NOVA ESTRATÉGIA: Incluir MUITO mais elementos para dar controle total ao usuário
     
     // 1. Elementos com regras aprendidas (sempre incluir)
-    if (ruleResult.shouldInclude && (node.type === 'RECTANGLE' || node.type === 'TEXT' || node.type === 'ELLIPSE' || node.type === 'VECTOR')) {
+    if (ruleResult.shouldInclude && (node.type === 'RECTANGLE' || node.type === 'ELLIPSE' || node.type === 'VECTOR')) {
       const classification = ruleResult.classification || 'disconnected';
       
       console.log(`✅ Incluído elemento "${node.name}" (${node.type}) devido a regra aprendida → ${classification.toUpperCase()}`);
@@ -175,12 +213,7 @@ export class ComponentAnalyzer {
     // Para outros tipos, processar filhos recursivamente
     if (node.children) {
       node.children.forEach(child => {
-        // Pular TEXT nodes que são filhos de INSTANCE (para evitar textos internos de botões)
-        if (child.type === 'TEXT' && node.type === 'INSTANCE') {
-          console.log(`🚫 Pulando TEXT "${child.name}" que é filho de INSTANCE "${node.name}"`);
-          return;
-        }
-        
+        // REMOVIDO: Não pular mais textos filhos de INSTANCE - deixar lógica de TEXT decidir
         this.extractComponents(child, components, depth + 1);
       });
     }
@@ -211,23 +244,16 @@ export class ComponentAnalyzer {
     if (depth > 4) return false;
     
     // Incluir elementos com nomes significativos que parecem ser componentes
-    const significantTypes = ['RECTANGLE', 'ELLIPSE', 'VECTOR', 'FRAME', 'GROUP', 'TEXT'];
+    const significantTypes = ['RECTANGLE', 'ELLIPSE', 'VECTOR', 'FRAME', 'GROUP'];
     if (!significantTypes.includes(node.type)) return false;
     
-    // Verificar se tem tamanho significativo (critérios mais flexíveis para TEXT)
+    // Verificar se tem tamanho significativo
     if (node.absoluteBoundingBox) {
       const { width, height } = node.absoluteBoundingBox;
       
-      if (node.type === 'TEXT') {
-        // Para TEXT, critérios mais flexíveis
-        if (width < 10 || height < 10) return false;
-        // TEXT pode ser maior, então limite mais alto
-        if (width > 800 || height > 200) return false;
-      } else {
-        // Para outros tipos, critérios originais
-        if (width < 20 || height < 20) return false;
-        if (width > 500 || height > 500) return false;
-      }
+      // Para outros tipos, critérios padrão
+      if (width < 20 || height < 20) return false;
+      if (width > 500 || height > 500) return false;
     }
     
     // Incluir se o nome sugere que é um componente
@@ -237,52 +263,10 @@ export class ComponentAnalyzer {
       /icon/i, /avatar/i, /badge/i, /chip/i, /tag/i,
       /header/i, /footer/i, /sidebar/i, /menu/i, /nav/i,
       /component/i, /element/i, /widget/i,
-      /text/i, /label/i, /title/i, /heading/i, /caption/i, // Padrões de texto
-      /rectangle \d+/i, /ellipse \d+/i, /vector \d+/i, /text \d+/i // Elementos numerados
+      /rectangle \d+/i, /ellipse \d+/i, /vector \d+/i // Elementos numerados
     ];
     
     const nameMatches = componentLikeNames.some(pattern => pattern.test(node.name));
-    
-    // Para TEXT, lógica específica mais permissiva
-    if (node.type === 'TEXT') {
-      console.log(`🔍 Analisando TEXT "${node.name}": depth=${depth}, nameMatches=${nameMatches}`);
-      
-      // Se o nome contém padrões típicos de componente de texto, incluir
-      const textComponentPatterns = [
-        /component/i, /element/i, /widget/i, /label/i, /title/i, /heading/i,
-        /text component/i, /text element/i, /standalone/i, /independent/i, /teste/i, /capa/i
-      ];
-      
-      const isTextComponent = textComponentPatterns.some(pattern => pattern.test(node.name));
-      console.log(`🔍 isTextComponent: ${isTextComponent} para "${node.name}"`);
-      
-      // Incluir se parece ser um componente de texto independente
-      if (isTextComponent || nameMatches) {
-        console.log(`📝 Detectado componente de texto: "${node.name}"`);
-        return true;
-      }
-      
-      // MAIS PERMISSIVO: Incluir a maioria dos textos que não são obviamente decorativos
-      if (depth <= 3) {
-        // Excluir apenas textos claramente decorativos
-        const excludePatterns = [
-          /^texto do/i, /^label$/i, /^text$/i, /placeholder/i, 
-          /lorem ipsum/i, /sample text/i, /example/i
-        ];
-        
-        const shouldExclude = excludePatterns.some(pattern => pattern.test(node.name));
-        
-        if (!shouldExclude) {
-          console.log(`📝 Detectado texto independente: "${node.name}" (depth: ${depth}) - sendo mais permissivo`);
-          return true;
-        } else {
-          console.log(`🚫 Texto excluído por ser decorativo: "${node.name}"`);
-        }
-      }
-      
-      console.log(`🚫 Texto não incluído: "${node.name}" (depth: ${depth})`);
-      return false;
-    }
     
     // Incluir se tem filhos (pode ser um componente complexo)
     const hasChildren = !!(node.children && node.children.length > 0);
@@ -313,6 +297,237 @@ export class ComponentAnalyzer {
     
     // Incluir a maioria dos elementos para dar controle ao usuário
     console.log(`📋 Considerando elemento como opção: "${node.name}" (${node.type}, depth: ${depth})`);
+    return true;
+  }
+
+  /**
+   * Determina se um elemento TEXT está usando tokens do Design System
+   * CRITÉRIO RIGOROSO: Precisa ter TANTO token de texto QUANTO cor do DS
+   */
+  private static isTextUsingDesignSystemTokens(node: FigmaNode): boolean {
+    // PRIMEIRO: Vamos logar TODAS as propriedades do nó TEXT para debug
+    console.log(`🔍 DEBUG: Propriedades completas do nó TEXT "${node.name}":`, node);
+
+    // LOGS DETALHADOS INDIVIDUAIS - usando try/catch para evitar erros
+    try {
+      console.log(`📋 textStyleId:`, node.textStyleId);
+      console.log(`📋 fillStyleId:`, node.fillStyleId);
+      console.log(`📋 styles (API REST):`, node.styles);
+      console.log(`📋 fills (length):`, node.fills ? node.fills.length : 'undefined');
+      console.log(`📋 fills (content):`, node.fills);
+      console.log(`📋 boundVariables:`, node.boundVariables);
+      console.log(`📋 Todas as propriedades:`, Object.keys(node));
+      
+      // Verificar se há propriedades relacionadas a estilo que podem ter nomes diferentes
+      const possibleStyleProperties = [
+        'textStyleId', 'fillStyleId', 'style', 'styles', 'textStyle', 'fillStyle',
+        'styleId', 'textStyles', 'fillStyles', 'boundVariables', 'variables'
+      ];
+      
+      console.log(`📋 Propriedades de estilo encontradas:`);
+      possibleStyleProperties.forEach(prop => {
+        if (node.hasOwnProperty(prop)) {
+          console.log(`   - ${prop}:`, (node as any)[prop]);
+        }
+      });
+      
+    } catch (error) {
+      console.log(`❌ Erro ao logar propriedades:`, error);
+    }
+
+    let hasTextToken = false;
+    let hasColorToken = false;
+
+    // 1. VERIFICAR TOKENS DE TEXTO (tipografia, fonte, etc.)
+    
+    // Plugin API - textStyleId
+    if (node.textStyleId && node.textStyleId.trim() !== '') {
+      console.log(`📝 Texto "${node.name}" tem textStyleId: ${node.textStyleId}`);
+      hasTextToken = true;
+    }
+    
+    // REST API - styles.text
+    if (node.styles && node.styles.text && node.styles.text.trim() !== '') {
+      console.log(`📝 Texto "${node.name}" tem styles.text: ${node.styles.text}`);
+      hasTextToken = true;
+    }
+
+    // Verificar boundVariables relacionadas a texto
+    if (node.boundVariables && Object.keys(node.boundVariables).length > 0) {
+      const textRelatedFields = ['fontFamily', 'fontSize', 'fontWeight', 'lineHeight', 'letterSpacing'];
+      const hasTextVariables = textRelatedFields.some(field => 
+        node.boundVariables && node.boundVariables[field]
+      );
+      
+      if (hasTextVariables) {
+        console.log(`📝 Texto "${node.name}" tem variáveis de texto:`, 
+          Object.keys(node.boundVariables).filter(key => textRelatedFields.includes(key))
+        );
+        hasTextToken = true;
+      }
+    }
+
+    // 2. VERIFICAR TOKENS DE COR (fill, stroke, etc.)
+    
+    // Plugin API - fillStyleId
+    if (node.fillStyleId && node.fillStyleId.trim() !== '') {
+      console.log(`🎨 Texto "${node.name}" tem fillStyleId: ${node.fillStyleId}`);
+      hasColorToken = true;
+    }
+    
+    // REST API - styles.fill
+    if (node.styles && node.styles.fill && node.styles.fill.trim() !== '') {
+      console.log(`🎨 Texto "${node.name}" tem styles.fill: ${node.styles.fill}`);
+      hasColorToken = true;
+    }
+
+    // Verificar fills com variáveis vinculadas
+    if (node.fills && Array.isArray(node.fills)) {
+      console.log(`🔍 Analisando ${node.fills.length} fills...`);
+      
+      const fillsWithVariables = node.fills.some(fill => 
+        fill.boundVariables && Object.keys(fill.boundVariables).length > 0
+      );
+      
+      if (fillsWithVariables) {
+        console.log(`🎨 Texto "${node.name}" tem fills com variáveis:`, 
+          node.fills.filter(fill => fill.boundVariables)
+        );
+        hasColorToken = true;
+      }
+      
+      // Verificar se há fillStyleId nos fills individuais
+      const fillsWithStyleId = node.fills.some(fill => 
+        (fill as any).styleId || (fill as any).fillStyleId
+      );
+      
+      if (fillsWithStyleId) {
+        console.log(`🎨 Texto "${node.name}" tem fills com styleId`);
+        hasColorToken = true;
+      }
+    }
+
+    // Verificar boundVariables relacionadas a cor
+    if (node.boundVariables && Object.keys(node.boundVariables).length > 0) {
+      const colorRelatedFields = ['fills', 'strokes', 'textRangeFills'];
+      const hasColorVariables = colorRelatedFields.some(field => 
+        node.boundVariables && node.boundVariables[field]
+      );
+      
+      if (hasColorVariables) {
+        console.log(`🎨 Texto "${node.name}" tem variáveis de cor:`, 
+          Object.keys(node.boundVariables).filter(key => colorRelatedFields.includes(key))
+        );
+        hasColorToken = true;
+      }
+    }
+
+    // ESTRATÉGIA ALTERNATIVA: Se não encontrou tokens, mas o texto tem fills com cores específicas
+    // Pode indicar que está usando um sistema de cores mesmo sem tokens explícitos
+    if (!hasColorToken && node.fills && Array.isArray(node.fills) && node.fills.length > 0) {
+      console.log(`🔍 Verificando fills para cores do sistema...`);
+      // Por enquanto, vamos assumir que qualquer fill indica algum tipo de estilo
+      // Isso pode ser refinado depois baseado em cores específicas do DS
+    }
+
+    // 3. RESULTADO FINAL
+    const isConnected = hasTextToken && hasColorToken;
+    
+    if (isConnected) {
+      console.log(`✅ Texto "${node.name}" CONECTADO - tem texto token (${hasTextToken}) E cor token (${hasColorToken})`);
+    } else {
+      console.log(`❌ Texto "${node.name}" DESCONECTADO - texto token: ${hasTextToken}, cor token: ${hasColorToken}`);
+      if (!hasTextToken) {
+        console.log(`   ⚠️ Faltando: token de texto (textStyleId/styles.text ou variáveis de tipografia)`);
+      }
+      if (!hasColorToken) {
+        console.log(`   ⚠️ Faltando: token de cor (fillStyleId/styles.fill ou variáveis de cor)`);
+      }
+    }
+
+    return isConnected;
+  }
+
+  /**
+   * Determina se um elemento TEXT deve ser incluído na análise
+   * Lógica mais permissiva e inclusiva para textos
+   */
+  private static shouldIncludeTextComponent(node: FigmaNode, depth: number): boolean {
+    // Incluir textos até profundidade 6 (mais permissivo que outros elementos)
+    if (depth > 6) {
+      console.log(`🚫 Texto muito profundo: "${node.name}" (depth: ${depth})`);
+      return false;
+    }
+    
+    // Verificar tamanho - critérios bem mais flexíveis para textos
+    if (node.absoluteBoundingBox) {
+      const { width, height } = node.absoluteBoundingBox;
+      
+      // Aceitar textos muito pequenos (podem ser labels importantes)
+      if (width < 5 || height < 5) {
+        console.log(`🚫 Texto muito pequeno: "${node.name}" (${width}x${height}px)`);
+        return false;
+      }
+      
+      // Limite superior bem alto para textos (podem ser títulos grandes)
+      if (width > 1200 || height > 400) {
+        console.log(`🚫 Texto muito grande: "${node.name}" (${width}x${height}px)`);
+        return false;
+      }
+    }
+
+    // Padrões de texto que devem ser INCLUÍDOS
+    const includePatterns = [
+      // Componentes de texto
+      /component/i, /element/i, /widget/i,
+      // Tipos de texto importantes
+      /title/i, /heading/i, /header/i, /label/i, /caption/i, /subtitle/i,
+      // Texto de interface
+      /button/i, /link/i, /menu/i, /nav/i, /tab/i,
+      // Conteúdo específico
+      /capa/i, /teste/i, /demo/i, /example/i, /sample/i,
+      // Textos numerados
+      /text \d+/i, /texto \d+/i,
+      // Nomes que sugerem conteúdo importante
+      /main/i, /primary/i, /secondary/i, /content/i
+    ];
+
+    const nameMatchesInclude = includePatterns.some(pattern => pattern.test(node.name));
+    
+    if (nameMatchesInclude) {
+      console.log(`✅ Texto incluído por padrão de nome: "${node.name}"`);
+      return true;
+    }
+
+    // Padrões de texto que devem ser EXCLUÍDOS (bem específicos)
+    const excludePatterns = [
+      // Textos claramente decorativos ou placeholders
+      /^placeholder$/i, /^lorem ipsum$/i, /^sample text$/i,
+      // Textos gerados automaticamente pelo Figma que são vazios
+      /^text$/i, /^label$/i, /^caption$/i,
+      // Apenas se forem exatamente esses nomes
+    ];
+
+    const nameMatchesExclude = excludePatterns.some(pattern => {
+      // Usar match exato para padrões de exclusão
+      const exactMatch = pattern.test(node.name) && pattern.test(node.name.trim());
+      return exactMatch && node.name.trim().length < 15; // Só excluir se for curto e exato
+    });
+
+    if (nameMatchesExclude) {
+      console.log(`🚫 Texto excluído por ser placeholder/decorativo: "${node.name}"`);
+      return false;
+    }
+
+    // NOVA ESTRATÉGIA: Ser MUITO mais inclusivo
+    // Incluir praticamente todos os textos que não foram explicitamente excluídos
+    
+    // Se chegou até aqui, incluir se:
+    // 1. Não é muito profundo (já verificado)
+    // 2. Tem tamanho razoável (já verificado)  
+    // 3. Não foi explicitamente excluído (já verificado)
+    
+    console.log(`📝 Texto incluído por critérios gerais: "${node.name}" (depth: ${depth})`);
     return true;
   }
 

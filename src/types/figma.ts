@@ -12,6 +12,24 @@ export interface FigmaNode {
     width: number;
     height: number;
   };
+  // Propriedades específicas para TEXT nodes
+  textStyleId?: string;
+  fillStyleId?: string;
+  fills?: Array<{
+    type: string;
+    color?: {
+      r: number;
+      g: number;
+      b: number;
+    };
+    boundVariables?: Record<string, any>;
+  }>;
+  boundVariables?: Record<string, any>;
+  // Propriedade styles da API REST (diferente da Plugin API)
+  styles?: {
+    fill?: string;
+    text?: string;
+  };
 }
 
 export interface FigmaFile {
