@@ -126,7 +126,9 @@ export class ComponentAnalyzer {
       return;
     }
 
-    // Para outros tipos de node, verificar se devem ser incluídos baseado nas regras OU características
+    // NOVA ESTRATÉGIA: Incluir MUITO mais elementos para dar controle total ao usuário
+    
+    // 1. Elementos com regras aprendidas (sempre incluir)
     if (ruleResult.shouldInclude && (node.type === 'RECTANGLE' || node.type === 'TEXT' || node.type === 'ELLIPSE' || node.type === 'VECTOR')) {
       const classification = ruleResult.classification || 'disconnected';
       
@@ -142,27 +144,32 @@ export class ComponentAnalyzer {
       });
     }
     
-    // NOVA LÓGICA: Detectar automaticamente possíveis componentes desconectados
-    // Incluir elementos que parecem ser componentes visuais importantes mas não estão no DS
+    // 2. Auto-detecção de componentes (lógica original)
     else if (this.shouldIncludeAsDisconnectedComponent(node, depth)) {
-      console.log(`🔶 Auto-detectado como componente desconectado: "${node.name}" (${node.type})`);
+      console.log(`🔶 Auto-detectado como componente: "${node.name}" (${node.type})`);
       
       components.push({
         name: node.name,
         type: 'OTHER',
-        isConnectedToDS: false, // Sempre desconectado para auto-detectados
+        isConnectedToDS: false,
         priority: this.calculatePriority(node),
         nodeId: node.id,
         depth
       });
     }
     
-    // DEBUG: Log para elementos TEXT que não foram incluídos
-    else if (node.type === 'TEXT') {
-      console.log(`🚫 Elemento TEXT NÃO incluído: "${node.name}" (depth: ${depth})`);
-      console.log(`   - shouldInclude: ${ruleResult.shouldInclude}`);
-      console.log(`   - shouldIncludeAsDisconnected: ${this.shouldIncludeAsDisconnectedComponent(node, depth)}`);
-      console.log(`   - absoluteBoundingBox:`, node.absoluteBoundingBox);
+    // 3. NOVO: Incluir TODOS os elementos visuais básicos (deixar usuário decidir)
+    else if (this.shouldShowAsOption(node, depth)) {
+      console.log(`📋 Adicionado como opção: "${node.name}" (${node.type}) - usuário decide`);
+      
+      components.push({
+        name: node.name,
+        type: 'OTHER',
+        isConnectedToDS: false,
+        priority: this.calculatePriority(node),
+        nodeId: node.id,
+        depth
+      });
     }
 
     // Para outros tipos, processar filhos recursivamente
@@ -180,28 +187,19 @@ export class ComponentAnalyzer {
   }
 
   /**
-   * Filtra componentes relevantes para a análise
+   * Filtra componentes relevantes para a análise - AGORA INCLUI TUDO!
    */
   private static filterRelevantComponents(components: ComponentAnalysis[]): ComponentAnalysis[] {
-    console.log(`🔍 Filtrando componentes: ${components.length} componentes antes da filtragem`);
+    console.log(`🔍 Mostrando TODOS os componentes: ${components.length} componentes encontrados`);
     
+    // NOVA ESTRATÉGIA: Mostrar TUDO, deixar usuário decidir via toggles
     const filtered = components.filter(component => {
-      // Incluir INSTANCE e COMPONENT sempre
-      if (component.type === 'INSTANCE' || component.type === 'COMPONENT') {
-        return true;
-      }
-      
-      // Para OTHER, incluir sempre (mudança para garantir que TEXT seja incluído)
-      if (component.type === 'OTHER') {
-        console.log(`✅ Incluindo componente OTHER: "${component.name}"`);
-        return true;
-      }
-      
-      console.log(`❌ Excluindo componente: "${component.name}" (tipo: ${component.type})`);
-      return false;
+      // Incluir TODOS os componentes encontrados
+      console.log(`✅ Incluindo componente: "${component.name}" (${component.type})`);
+      return true;
     });
     
-    console.log(`📊 Filtragem concluída: ${filtered.length} componentes após filtragem`);
+    console.log(`📊 Todos os componentes incluídos: ${filtered.length} componentes na análise`);
     return filtered;
   }
 
@@ -291,6 +289,31 @@ export class ComponentAnalyzer {
     
     // Incluir se parece ser um componente baseado no nome OU se tem estrutura complexa
     return nameMatches || (hasChildren && depth <= 2);
+  }
+
+  /**
+   * Determina se um elemento deve ser mostrado como opção para o usuário decidir
+   */
+  private static shouldShowAsOption(node: FigmaNode, depth: number): boolean {
+    // Não mostrar elementos muito profundos (provavelmente internos)
+    if (depth > 5) return false;
+    
+    // Tipos de elementos que podem ser interessantes
+    const interestingTypes = ['TEXT', 'RECTANGLE', 'ELLIPSE', 'VECTOR', 'FRAME', 'GROUP', 'LINE'];
+    if (!interestingTypes.includes(node.type)) return false;
+    
+    // Pular elementos com nomes que começam com underscore (convenção de oculto)
+    if (node.name.startsWith('_')) return false;
+    
+    // Verificar tamanho mínimo (evitar elementos muito pequenos/decorativos)
+    if (node.absoluteBoundingBox) {
+      const { width, height } = node.absoluteBoundingBox;
+      if (width < 5 || height < 5) return false;
+    }
+    
+    // Incluir a maioria dos elementos para dar controle ao usuário
+    console.log(`📋 Considerando elemento como opção: "${node.name}" (${node.type}, depth: ${depth})`);
+    return true;
   }
 
   /**

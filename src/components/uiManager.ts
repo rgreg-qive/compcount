@@ -110,13 +110,20 @@ export class UIManager {
       : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Desconectado</span>';
 
     // Criar toggle para incluir/excluir da análise
+    // Estado inicial baseado na importância: INSTANCE e COMPONENT ligados, outros desligados
+    const isImportantByDefault = component.type === 'INSTANCE' || component.type === 'COMPONENT';
     const toggleId = `toggle-${component.nodeId.replace(':', '-')}`;
+    const checkedAttribute = isImportantByDefault ? 'checked' : '';
+    
     const includeToggle = `
       <label class="relative inline-flex items-center cursor-pointer justify-center">
-        <input type="checkbox" id="${toggleId}" class="sr-only peer component-toggle" checked data-node-id="${component.nodeId}">
+        <input type="checkbox" id="${toggleId}" class="sr-only peer component-toggle" ${checkedAttribute} data-node-id="${component.nodeId}">
         <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
       </label>
     `;
+    
+    // Log do estado inicial para debug
+    console.log(`🔘 Toggle para "${component.name}" (${component.type}): ${isImportantByDefault ? 'LIGADO' : 'DESLIGADO'} por padrão`);
 
     // Criar link direto para o elemento no Figma
     const figmaElementUrl = this.createFigmaElementUrl(frameUrl, component.nodeId);
