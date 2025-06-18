@@ -369,6 +369,9 @@ class FigmaAnalyzerApp {
       this.currentResult = result;
       this.currentFrameNode = frameNode;
 
+      // Definir resultado no UIManager para geração de links
+      this.uiManager.setCurrentAnalysisResult(result);
+
       // Atualizar interface
       this.updateUI(result);
 

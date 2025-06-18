@@ -370,19 +370,46 @@ export class UIManager {
   }
 
   /**
-   * Gera link compartilhável com dados da análise atual
+   * Gera link compartilhável com dados completos da análise atual
    */
   private generateShareableLink(): void {
     try {
-      // Coletar dados da análise atual
+      // Verificar se há análise atual
+      if (!this.currentAnalysisResult) {
+        this.showError('Nenhuma análise disponível para compartilhar');
+        return;
+      }
+
+      // Coletar dados básicos da interface
       const connectedCount = document.getElementById('connected-count')?.textContent || '0';
       const disconnectedCount = document.getElementById('disconnected-count')?.textContent || '0';
       const complianceRate = document.getElementById('compliance-rate')?.textContent || '0%';
       const complianceStatus = document.getElementById('compliance-status')?.textContent || '';
       
-      // Criar URL com parâmetros da análise
+      // Criar ID único para esta análise
+      const analysisId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Preparar dados completos da análise
+      const fullAnalysisData = {
+        frameInfo: this.currentAnalysisResult.frameInfo,
+        summary: this.currentAnalysisResult.summary,
+        components: this.currentAnalysisResult.components,
+        timestamp: Date.now(),
+        complianceRate: parseFloat(complianceRate.replace('%', '')),
+        complianceStatus: complianceStatus,
+        analysisId: analysisId
+      };
+      
+      // Salvar dados completos no localStorage para acesso posterior
+      try {
+        localStorage.setItem(`shared-analysis-${analysisId}`, JSON.stringify(fullAnalysisData));
+      } catch (error) {
+        console.warn('Não foi possível salvar dados completos no localStorage:', error);
+      }
+      
+      // Criar URL com parâmetros básicos e ID para dados completos
       const currentUrl = new URL(window.location.href);
-      const shareableUrl = `${currentUrl.origin}${currentUrl.pathname}?shared=true&connected=${connectedCount}&disconnected=${disconnectedCount}&compliance=${encodeURIComponent(complianceRate)}&status=${encodeURIComponent(complianceStatus)}&timestamp=${Date.now()}`;
+      const shareableUrl = `${currentUrl.origin}/view.html?shared=true&id=${analysisId}&connected=${connectedCount}&disconnected=${disconnectedCount}&compliance=${encodeURIComponent(complianceRate)}&status=${encodeURIComponent(complianceStatus)}&timestamp=${Date.now()}`;
       
       // Copiar para clipboard
       navigator.clipboard.writeText(shareableUrl).then(() => {
@@ -399,12 +426,14 @@ export class UIManager {
       });
       
       // Log para debug
-      console.log('📊 Link gerado com dados:', {
+      console.log('📊 Link gerado com dados completos:', {
+        analysisId,
         connected: connectedCount,
         disconnected: disconnectedCount,
         compliance: complianceRate,
         status: complianceStatus,
-        url: shareableUrl
+        url: shareableUrl,
+        fullDataSaved: true
       });
       
     } catch (error) {
@@ -412,6 +441,15 @@ export class UIManager {
       this.showError('Erro ao gerar link compartilhável');
     }
   }
+
+  /**
+   * Define o resultado da análise atual para uso em outras funcionalidades
+   */
+  setCurrentAnalysisResult(result: any): void {
+    this.currentAnalysisResult = result;
+  }
+
+  private currentAnalysisResult: any = null;
 
 
 
