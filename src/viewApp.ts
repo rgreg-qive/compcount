@@ -363,52 +363,39 @@ class ViewApp {
   private getAllComponents(data: SharedAnalysisData): Array<{component: ComponentAnalysis, isIncluded: boolean}> {
     const result: Array<{component: ComponentAnalysis, isIncluded: boolean}> = [];
     
-    // Adicionar componentes incluídos na análise
-    data.components.forEach(component => {
-      result.push({ component, isIncluded: true });
-    });
-    
-    // Tentar recuperar componentes excluídos do localStorage se disponível
+    // Tentar recuperar dados completos do localStorage primeiro
     try {
       const fullData = localStorage.getItem(`shared-analysis-${data.analysisId || 'unknown'}`);
       if (fullData) {
         const parsedData = JSON.parse(fullData);
+        
+        // Adicionar componentes incluídos na análise
+        if (parsedData.components && Array.isArray(parsedData.components)) {
+          parsedData.components.forEach((component: ComponentAnalysis) => {
+            result.push({ component, isIncluded: true });
+          });
+        }
+        
+        // Adicionar componentes excluídos da análise
         if (parsedData.excludedComponents && Array.isArray(parsedData.excludedComponents)) {
           parsedData.excludedComponents.forEach((component: ComponentAnalysis) => {
             result.push({ component, isIncluded: false });
           });
         }
+        
+        // Se encontrou dados completos, retornar
+        if (result.length > 0) {
+          return result;
+        }
       }
     } catch (error) {
-      console.warn('Não foi possível recuperar componentes excluídos:', error);
+      console.warn('Não foi possível recuperar dados completos do localStorage:', error);
     }
     
-    // Se não há componentes excluídos, criar alguns exemplos para demonstração
-    if (result.filter(r => !r.isIncluded).length === 0) {
-      // Adicionar alguns componentes excluídos fictícios para demonstração
-      const excludedExamples: ComponentAnalysis[] = [
-        {
-          name: 'Background Layer',
-          type: 'OTHER',
-          isConnectedToDS: false,
-          priority: 1,
-          nodeId: 'excluded-1',
-          depth: 1
-        },
-        {
-          name: 'Decorative Element',
-          type: 'OTHER',
-          isConnectedToDS: false,
-          priority: 1,
-          nodeId: 'excluded-2',
-          depth: 1
-        }
-      ];
-      
-      excludedExamples.forEach(component => {
-        result.push({ component, isIncluded: false });
-      });
-    }
+    // Fallback: usar apenas os componentes básicos da URL (sem componentes fictícios)
+    data.components.forEach(component => {
+      result.push({ component, isIncluded: true });
+    });
     
     return result;
   }
