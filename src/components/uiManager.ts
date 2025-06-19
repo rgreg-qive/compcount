@@ -102,11 +102,11 @@ export class UIManager {
    */
   private createComponentRow(component: ComponentAnalysis, isConnected: boolean, frameUrl: string): HTMLTableRowElement {
     const row = document.createElement('tr');
-    row.className = 'border-b border-gray-200 hover:bg-gray-50';
+    row.className = 'border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700';
 
     const statusBadge = isConnected 
-      ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Conectado</span>'
-      : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Desconectado</span>';
+      ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">Conectado</span>'
+      : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">Desconectado</span>';
 
     // Criar toggle para incluir/excluir da análise
     // Estado inicial baseado na importância: INSTANCE, COMPONENT e elementos com nomes de DS
@@ -131,14 +131,14 @@ export class UIManager {
     // Criar link direto para o elemento no Figma
     const figmaElementUrl = this.createFigmaElementUrl(frameUrl, component.nodeId);
     const nodeIdLink = figmaElementUrl 
-      ? `<a href="${figmaElementUrl}" target="_blank" class="text-red-600 hover:text-red-800 underline font-mono text-sm" title="Abrir elemento no Figma">${component.nodeId} 🔗</a>`
-      : `<span class="font-mono text-sm text-gray-500">${component.nodeId}</span>`;
+      ? `<a href="${figmaElementUrl}" target="_blank" class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 underline font-mono text-sm" title="Abrir elemento no Figma">${component.nodeId} 🔗</a>`
+      : `<span class="font-mono text-sm text-gray-500 dark:text-gray-400">${component.nodeId}</span>`;
 
     row.innerHTML = `
-      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
         ${component.name}
       </td>
-      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
         ${component.type}
       </td>
       <td class="px-6 py-4 whitespace-nowrap">
