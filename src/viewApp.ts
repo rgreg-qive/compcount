@@ -22,11 +22,13 @@ interface SharedAnalysisData {
 
 class ViewApp {
   private chartManager: ChartManager;
-  private themeManager: ThemeManager;
 
   constructor() {
     this.chartManager = new ChartManager();
-    this.themeManager = new ThemeManager();
+    
+    // Inicializar theme manager apenas para detecção automática do sistema
+    new ThemeManager();
+    
     this.init();
   }
 
@@ -36,9 +38,6 @@ class ViewApp {
   private async init(): Promise<void> {
     try {
       console.log('🚀 Iniciando ViewApp...');
-      
-      // Configurar theme toggle
-      this.setupThemeToggle();
       
       // Verificar se é um link compartilhado
       const urlParams = new URLSearchParams(window.location.search);
@@ -80,32 +79,7 @@ class ViewApp {
     }
   }
 
-  /**
-   * Configura o toggle de tema
-   */
-  private setupThemeToggle(): void {
-    const themeToggle = document.getElementById('theme-toggle');
-    const themeIcon = document.getElementById('theme-icon');
-    
-    if (themeToggle && themeIcon) {
-      // Atualizar ícone inicial
-      themeIcon.textContent = this.themeManager.getThemeIcon();
-      
-      // Configurar evento de clique
-      themeToggle.addEventListener('click', () => {
-        this.themeManager.toggleTheme();
-        themeIcon.textContent = this.themeManager.getThemeIcon();
-        
-        console.log(`🎨 Tema alterado para: ${this.themeManager.getThemeName()}`);
-      });
-      
-      // Escutar mudanças de tema
-      window.addEventListener('themeChanged', ((event: CustomEvent) => {
-        themeIcon.textContent = this.themeManager.getThemeIcon();
-        console.log(`🎨 Tema alterado: ${event.detail.isDark ? 'dark' : 'light'}`);
-      }) as EventListener);
-    }
-  }
+
 
   /**
    * Extrai dados da análise dos parâmetros da URL
