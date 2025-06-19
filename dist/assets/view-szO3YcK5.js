@@ -14,7 +14,7 @@ import{C as x,T as f}from"./themeManager-CRIQpY6X.js";class y{constructor(){this
       <div class="flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
         <div>
           <p class="text-sm font-medium text-red-800 dark:text-red-200">Componentes Desconectados</p>
-          <p class="text-2xl font-bold text-red-900 dark:text-red-100">${e.summary.disconnected}</p>
+          <p class="text-2xl font-bold text-red-900 dark:text-red-200">${e.summary.disconnected}</p>
         </div>
         <div class="text-red-600 dark:text-red-400">
           <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
