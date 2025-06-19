@@ -317,36 +317,36 @@ class ViewApp {
       : 0;
     
     summaryEl.innerHTML = `
-      <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+      <div class="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
         <div>
-          <p class="text-sm font-medium text-green-800">Componentes Conectados</p>
-          <p class="text-2xl font-bold text-green-900">${data.summary.connected}</p>
+          <p class="text-sm font-medium text-green-800 dark:text-green-200">Componentes Conectados</p>
+          <p class="text-2xl font-bold text-green-900 dark:text-green-100">${data.summary.connected}</p>
         </div>
-        <div class="text-green-600">
+        <div class="text-green-600 dark:text-green-400">
           <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
         </div>
       </div>
       
-      <div class="flex items-center justify-between p-4 bg-red-50 rounded-lg">
+      <div class="flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
         <div>
-          <p class="text-sm font-medium text-red-800">Componentes Desconectados</p>
-          <p class="text-2xl font-bold text-red-900">${data.summary.disconnected}</p>
+          <p class="text-sm font-medium text-red-800 dark:text-red-200">Componentes Desconectados</p>
+          <p class="text-2xl font-bold text-red-900 dark:text-red-100">${data.summary.disconnected}</p>
         </div>
-        <div class="text-red-600">
+        <div class="text-red-600 dark:text-red-400">
           <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
         </div>
       </div>
       
-      <div class="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+      <div class="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
         <div>
-          <p class="text-sm font-medium text-blue-800">Taxa de Conformidade</p>
-          <p class="text-2xl font-bold text-blue-900">${complianceRate}%</p>
+          <p class="text-sm font-medium text-blue-800 dark:text-blue-200">Taxa de Conformidade</p>
+          <p class="text-2xl font-bold text-blue-900 dark:text-blue-100">${complianceRate}%</p>
         </div>
-        <div class="text-blue-600">
+        <div class="text-blue-600 dark:text-blue-400">
           <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
           </svg>
@@ -390,13 +390,13 @@ class ViewApp {
       const row = document.createElement('tr');
       row.innerHTML = `
         <td colspan="5" class="px-6 py-8 text-center">
-          <div class="text-gray-500">
-            <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="text-gray-500 dark:text-gray-400">
+            <svg class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
             </svg>
-            <h3 class="text-sm font-medium text-gray-900 mb-1">Dados detalhados não disponíveis</h3>
-            <p class="text-sm text-gray-500">Esta análise foi compartilhada apenas com os totais.</p>
-            <p class="text-xs text-gray-400 mt-2">Para ver os componentes detalhados, gere um novo link após fazer a análise.</p>
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">Dados detalhados não disponíveis</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Esta análise foi compartilhada apenas com os totais.</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">Para ver os componentes detalhados, gere um novo link após fazer a análise.</p>
           </div>
         </td>
       `;
@@ -407,26 +407,26 @@ class ViewApp {
     allComponents.forEach(componentData => {
       const { component, isIncluded } = componentData;
       const row = document.createElement('tr');
-      row.className = 'border-b border-gray-200 hover:bg-gray-50';
+      row.className = 'border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700';
       
       const statusBadge = component.isConnectedToDS 
-        ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Conectado</span>'
-        : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Desconectado</span>';
+        ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">Conectado</span>'
+        : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">Desconectado</span>';
       
       // Criar link para o elemento no Figma (igual à análise principal)
       const figmaElementUrl = this.createFigmaElementUrl(data.frameInfo.url, component.nodeId);
       const nodeIdLink = figmaElementUrl 
-        ? `<a href="${figmaElementUrl}" target="_blank" class="text-red-600 hover:text-red-800 underline font-mono text-sm" title="Abrir elemento no Figma">${component.nodeId} 🔗</a>`
-        : `<span class="font-mono text-sm text-gray-500">${component.nodeId}</span>`;
+        ? `<a href="${figmaElementUrl}" target="_blank" class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 underline font-mono text-sm" title="Abrir elemento no Figma">${component.nodeId} 🔗</a>`
+        : `<span class="font-mono text-sm text-gray-500 dark:text-gray-400">${component.nodeId}</span>`;
 
       // Mostrar se está incluído ou excluído da análise
       const includeInAnalysis = isIncluded ? 'Sim' : 'Não';
       
       row.innerHTML = `
-        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
           ${component.name}
         </td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
           ${component.type}
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
@@ -435,7 +435,7 @@ class ViewApp {
         <td class="px-6 py-4 whitespace-nowrap">
           ${nodeIdLink}
         </td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
           ${includeInAnalysis}
         </td>
       `;
