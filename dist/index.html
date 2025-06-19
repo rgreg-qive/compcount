@@ -10,45 +10,39 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
     </style>
-  <script type="module" crossorigin src="/assets/main-CzTEbkkp.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/chartManager-DTtrTfBc.js">
+  <script type="module" crossorigin src="/assets/main-BxiQySL5.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/themeManager-CRIQpY6X.js">
 </head>
-<body class="bg-gray-50 min-h-screen">
+  <body class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
     <!-- Header -->
-    <header class="bg-white shadow-sm border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div class="flex items-center justify-between">
+    <header class="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        <svg width="138" height="40" viewBox="0 0 138 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-8 w-auto">
-                            <path d="M61.5494 39.4315H54.6783V13.5861H61.5494V39.4315Z" fill="#100F0D"/>
-                            <path fill-rule="evenodd" clip-rule="evenodd" d="M41.9537 39.4315H48.8248V0H41.9537V16.9352C39.7033 14.4777 36.5342 12.9492 32.8821 12.9492C25.5642 12.9492 20.1629 19.1552 20.1629 26.4983V26.593C20.1629 33.9834 25.5206 40 32.7949 40C36.4836 40 39.6853 38.4473 41.9537 35.9607V39.4315ZM33.884 34.1914C29.846 34.1914 26.8719 30.7587 26.8719 26.5422V26.4881C26.8719 22.2986 29.8702 18.7578 33.9324 18.7578C37.9704 18.7578 40.9445 22.2175 40.9445 26.434V26.4881C40.9445 30.7046 37.9462 34.1914 33.884 34.1914Z" fill="#100F0D"/>
-                            <path d="M84.3502 13.5861L78.6489 30.9224L72.6694 13.5861H65.4283L75.4179 39.4315H82.0246L91.4326 13.5861H84.3502Z" fill="#100F0D"/>
-                            <path d="M99.8312 20.1933C100.975 18.9958 102.518 18.3961 104.456 18.3961C106.64 18.3961 108.252 19.0924 109.292 20.484C109.903 21.3008 110.332 22.262 110.584 23.3638H98.2537C98.4863 22.109 99.011 21.0512 99.8312 20.1933ZM111.317 30.9521C110.636 31.9028 109.847 32.7033 108.948 33.3537C107.927 34.094 106.517 34.4641 104.72 34.4641C102.64 34.4641 101.02 33.8654 99.8574 32.667C98.847 31.6254 98.2757 30.251 98.1443 28.5438H117.141C117.211 28.298 117.255 27.9891 117.273 27.619C117.29 27.2488 117.3 26.871 117.3 26.4827C117.3 23.8755 116.771 21.559 115.714 19.5324C114.656 17.5067 113.168 15.9113 111.247 14.7493C109.327 13.5863 107.063 13.0048 104.456 13.0048C101.884 13.0048 99.637 13.5777 97.7174 14.7225C95.7962 15.8683 94.2989 17.4541 93.2245 19.4798C92.1493 21.5064 91.6125 23.8583 91.6125 26.5353C91.6125 29.2497 92.1493 31.6092 93.2245 33.6177C94.2989 35.6262 95.7962 37.1861 97.7174 38.2955C99.637 39.4059 101.884 39.9607 104.456 39.9607C107.275 39.9607 109.68 39.3878 111.67 38.2429C113.522 37.1775 115.016 35.6778 116.151 33.7429L111.317 30.9521Z" fill="#100F0D"/>
-                            <path d="M8.12339 40L0 26.474L8.36386 26.4746L16.4472 40H8.12339Z" fill="#EF3923"/>
-                            <path d="M8.12339 12.9492L0 26.474L8.36386 26.4746L16.4472 12.9492H8.12339Z" fill="#EF3923"/>
-                            <path d="M129.339 40L137.462 26.4746H129.099L121.015 40H129.339Z" fill="#EF3923"/>
-                            <path d="M129.339 12.9492L137.462 26.4746H129.099L121.015 12.9492H129.339Z" fill="#EF3923"/>
-                        </svg>
-                    </div>
-                    <div class="ml-4">
-                        <h1 class="text-xl font-semibold text-gray-900">Análise de Componentes</h1>
+                        <h1 class="text-xl font-bold text-gray-900 dark:text-white">🎨 Figma Component Analyzer</h1>
                     </div>
                 </div>
                 <div class="flex items-center space-x-3">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        v1.0.0
-                    </span>
+                    <!-- Theme Toggle Button -->
                     <button 
-                        id="logout-btn"
-                        class="text-sm text-gray-600 hover:text-gray-900 flex items-center"
-                        title="Sair"
+                        id="theme-toggle"
+                        class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
+                        title="Alternar tema"
                     >
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                        </svg>
-                        Sair
+                        <span id="theme-icon" class="text-lg">🖥️</span>
                     </button>
+                    <a 
+                        href="https://github.com/rgreg-qive/compcount" 
+                        target="_blank" 
+                        class="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white flex items-center"
+                        title="Ver no GitHub"
+                    >
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                        GitHub
+                    </a>
                 </div>
             </div>
         </div>
@@ -106,8 +100,8 @@
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" id="main-app">
         <!-- Figma Link Input Section -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Analisar Novo Frame do Figma</h2>
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8">
+                                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Analisar Novo Frame do Figma</h2>
             <div class="space-y-4">
                 <div>
                     <label for="figma-token" class="block text-sm font-medium text-gray-700 mb-2">
@@ -198,18 +192,18 @@
 
         <!-- Summary Cards -->
         <div id="summary-cards" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 hidden">
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 summary-card">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 summary-card">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                        <div class="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                            <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
                             </svg>
                         </div>
                     </div>
                     <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">Componentes Conectados</p>
-                        <p class="text-2xl font-semibold text-gray-900 summary-value">0</p>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Componentes Conectados</p>
+                        <p class="text-2xl font-semibold text-gray-900 dark:text-white summary-value">0</p>
                     </div>
                 </div>
             </div>

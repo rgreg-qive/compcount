@@ -11,6 +11,30 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - Melhorias de performance
 - Novas funcionalidades em planejamento
 
+## [1.1.0] - 2025-01-18
+
+### ✨ Adicionado
+- **🌙 Dark Mode**: Suporte completo a tema escuro
+  - Detecção automática da preferência do sistema (`prefers-color-scheme`)
+  - Toggle manual para alternar entre Claro/Sistema/Escuro
+  - Persistência da escolha no localStorage
+  - Transições suaves entre temas
+  - Aplicado em ambas as páginas (principal e visualização)
+- **🎨 Theme Manager**: Sistema inteligente de gerenciamento de temas
+  - Escuta mudanças na preferência do sistema
+  - API completa para controle de temas
+  - Eventos customizados para reação de componentes
+- **🛠️ Configuração Tailwind**: Configuração otimizada para dark mode
+  - Modo `class` para controle manual
+  - Cores customizadas para melhor contraste
+  - Suporte completo a todas as variantes dark:
+
+### 🔧 Técnico
+- Novo componente `ThemeManager` para controle centralizado
+- Configuração `tailwind.config.js` com suporte a dark mode
+- Classes CSS dark: aplicadas em todos os elementos da interface
+- Integração completa com ambas as aplicações (main e view)
+
 ## [1.0.0] - 2025-01-18
 
 ### ✨ Adicionado
