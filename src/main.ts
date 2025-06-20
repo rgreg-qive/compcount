@@ -2,6 +2,7 @@ import { FigmaApiService } from './services/figmaApi.ts';
 import { ComponentAnalyzer } from './services/componentAnalyzer.ts';
 import { LearningService } from './services/learningService.ts';
 import { AuthService } from './services/authService.ts';
+import { SheetsService, type FeedbackData } from './services/sheetsService.ts';
 import { ChartManager } from './components/chartManager.ts';
 import { UIManager } from './components/uiManager.ts';
 import type { AnalysisResult, FigmaNode } from './types/figma.ts';
@@ -142,8 +143,32 @@ class FigmaAnalyzerApp {
     this.uiManager.setupFeedbackForm();
     this.uiManager.updateLearningStats();
     
+    // Tentar sincronizar feedbacks pendentes
+    this.syncPendingFeedbacks();
+    
     // Configurar event listeners
     this.setupEventListeners();
+  }
+
+  /**
+   * Sincroniza feedbacks pendentes em background
+   */
+  private async syncPendingFeedbacks(): Promise<void> {
+    try {
+      const pendingCount = SheetsService.getPendingCount();
+      if (pendingCount > 0) {
+        console.log(`🔄 Tentando sincronizar ${pendingCount} feedbacks pendentes...`);
+        await SheetsService.syncPendingFeedbacks();
+        
+        // Atualizar UI se ainda há pendentes
+        const remainingCount = SheetsService.getPendingCount();
+        if (remainingCount > 0) {
+          console.log(`⏳ ${remainingCount} feedbacks ainda pendentes de sincronização`);
+        }
+      }
+    } catch (error) {
+      console.error('Erro na sincronização automática:', error);
+    }
   }
 
 
@@ -458,27 +483,64 @@ class FigmaAnalyzerApp {
   /**
    * Envia o feedback do usuário
    */
-  private submitFeedback(): void {
+  private async submitFeedback(): Promise<void> {
     if (!this.currentResult) {
       this.uiManager.showError('Nenhuma análise ativa para dar feedback');
       return;
     }
 
     // Coletar dados do formulário
-    const feedback = this.uiManager.collectFeedbackData();
-    if (!feedback) {
+    const feedbackForm = this.uiManager.collectFeedbackData();
+    if (!feedbackForm) {
       return; // Erro já mostrado no collectFeedbackData
     }
 
+    // Mostrar loading no botão
+    const submitBtn = document.getElementById('submit-feedback') as HTMLButtonElement;
+    const originalText = submitBtn?.innerHTML;
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '⏳ Enviando...';
+    }
+
     try {
-      // Salvar feedback no padrão
+      // Preparar dados para Google Sheets
+      const currentUser = AuthService.getCurrentUser();
+      const sheetsData: FeedbackData = {
+        usuario: currentUser || 'usuário não identificado',
+        frameUrl: this.currentResult.frameInfo.url,
+        tipoproblema: feedbackForm.type,
+        nomeComponente: feedbackForm.componentName,
+        classificacaoEsperada: feedbackForm.expectedClassification,
+        descricao: feedbackForm.description
+      };
+
+      // Tentar enviar para Google Sheets
+      const sentToSheets = await SheetsService.sendFeedback(sheetsData);
+      
+      if (!sentToSheets) {
+        // Se falhou, salvar localmente
+        SheetsService.saveFeedbackLocally(sheetsData);
+      }
+
+      // Continuar salvando localmente também (para sistema de aprendizado)
       const urlInfo = FigmaApiService.parseUrl(this.currentResult.frameInfo.url);
       if (urlInfo) {
-        LearningService.addFeedbackToPattern(urlInfo.nodeId, feedback);
+        LearningService.addFeedbackToPattern(urlInfo.nodeId, feedbackForm);
         
-        this.uiManager.showSuccess(
-          `Feedback salvo! O sistema aprendeu e um arquivo foi baixado automaticamente. Envie este arquivo para melhorar o sistema para todos!`
-        );
+        // Mostrar mensagem de sucesso adequada
+        const pendingCount = SheetsService.getPendingCount();
+        let successMessage = '';
+        
+        if (sentToSheets) {
+          successMessage = '✅ Feedback enviado com sucesso para a planilha!';
+        } else {
+          successMessage = `⏳ Feedback salvo localmente (${pendingCount} pendentes). Será enviado quando a conexão estiver disponível.`;
+        }
+        
+        successMessage += ' O sistema também aprendeu com seu feedback.';
+        
+        this.uiManager.showSuccess(successMessage);
 
         // Atualizar estatísticas
         this.uiManager.updateLearningStats();
@@ -487,16 +549,23 @@ class FigmaAnalyzerApp {
         // Limpar e esconder formulário
         this.cancelFeedback();
 
-        console.log('📚 Feedback salvo:', feedback);
+        console.log('📚 Feedback salvo:', feedbackForm);
+        console.log('📊 Dados enviados para planilha:', sheetsData);
         console.log('🧠 Sistema aprendeu e criou novas regras automáticas');
       } else {
         throw new Error('Não foi possível identificar o frame para salvar o feedback');
       }
     } catch (error) {
-      console.error('Erro ao salvar feedback:', error);
+      console.error('Erro ao processar feedback:', error);
       this.uiManager.showError(
-        error instanceof Error ? error.message : 'Erro ao salvar feedback'
+        error instanceof Error ? error.message : 'Erro ao processar feedback'
       );
+    } finally {
+      // Restaurar botão
+      if (submitBtn && originalText) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+      }
     }
   }
 }
