@@ -155,17 +155,7 @@ class FigmaAnalyzerApp {
    */
   private async syncPendingFeedbacks(): Promise<void> {
     try {
-      const pendingCount = SheetsService.getPendingCount();
-      if (pendingCount > 0) {
-        console.log(`🔄 Tentando sincronizar ${pendingCount} feedbacks pendentes...`);
-        await SheetsService.syncPendingFeedbacks();
-        
-        // Atualizar UI se ainda há pendentes
-        const remainingCount = SheetsService.getPendingCount();
-        if (remainingCount > 0) {
-          console.log(`⏳ ${remainingCount} feedbacks ainda pendentes de sincronização`);
-        }
-      }
+      await SheetsService.syncPendingFeedbacks();
     } catch (error) {
       console.error('Erro na sincronização automática:', error);
     }
@@ -509,36 +499,22 @@ class FigmaAnalyzerApp {
       const sheetsData: FeedbackData = {
         usuario: currentUser || 'usuário não identificado',
         frameUrl: this.currentResult.frameInfo.url,
-        tipoproblema: feedbackForm.type,
+        tipoProblema: feedbackForm.type,
         nomeComponente: feedbackForm.componentName,
         classificacaoEsperada: feedbackForm.expectedClassification,
         descricao: feedbackForm.description
       };
 
-      // Tentar enviar para Google Sheets
-      const sentToSheets = await SheetsService.sendFeedback(sheetsData);
-      
-      if (!sentToSheets) {
-        // Se falhou, salvar localmente
-        SheetsService.saveFeedbackLocally(sheetsData);
-      }
+      // Processar feedback (tentará Google Sheets primeiro, depois fallback local)
+      await SheetsService.processFeedback(sheetsData);
 
       // Continuar salvando localmente também (para sistema de aprendizado)
       const urlInfo = FigmaApiService.parseUrl(this.currentResult.frameInfo.url);
       if (urlInfo) {
         LearningService.addFeedbackToPattern(urlInfo.nodeId, feedbackForm);
         
-        // Mostrar mensagem de sucesso adequada
-        const pendingCount = SheetsService.getPendingCount();
-        let successMessage = '';
-        
-        if (sentToSheets) {
-          successMessage = '✅ Feedback enviado com sucesso para a planilha!';
-        } else {
-          successMessage = `⏳ Feedback salvo localmente (${pendingCount} pendentes). Será enviado quando a conexão estiver disponível.`;
-        }
-        
-        successMessage += ' O sistema também aprendeu com seu feedback.';
+        // Mostrar mensagem de sucesso
+        const successMessage = '✅ Feedback processado com sucesso! O sistema aprendeu com seu feedback.';
         
         this.uiManager.showSuccess(successMessage);
 
