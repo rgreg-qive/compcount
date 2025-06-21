@@ -12,15 +12,15 @@ export interface FeedbackData {
 }
 
 /**
- * Serviço para integração com Google Sheets via Google Apps Script
- * Resolve problemas de CORS usando GAS como proxy
+ * Serviço para integração com Google Sheets via form submission
+ * Resolve problemas de CORS usando POST form sem AJAX
  */
 export class SheetsService {
   // URL do Google Apps Script (será configurada via env vars)
   private static readonly SCRIPT_URL = Environment.GOOGLE_SCRIPT_URL;
   
   /**
-   * Envia feedback para o Google Sheets via Google Apps Script
+   * Envia feedback para o Google Sheets via form submission
    */
   static async sendFeedback(feedback: FeedbackData): Promise<boolean> {
     // DEBUG: Verificar variáveis de ambiente
@@ -41,30 +41,35 @@ export class SheetsService {
         userAgent: feedback.userAgent || navigator.userAgent
       };
 
-      console.log('📤 Enviando feedback via Google Apps Script:', dataToSend);
+      console.log('📤 Enviando feedback via form submission:', dataToSend);
 
-      // Fazer requisição para o Google Apps Script
-      const response = await fetch(this.SCRIPT_URL, {
-        method: 'POST',
-        mode: 'cors',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(dataToSend)
+      // Criar form invisível para envio
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = this.SCRIPT_URL;
+      form.target = '_blank'; // Abre em nova aba (será fechada automaticamente)
+      form.style.display = 'none';
+
+      // Adicionar campos do form
+      Object.entries(dataToSend).forEach(([key, value]) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = String(value || '');
+        form.appendChild(input);
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const result = await response.json();
+      // Adicionar ao DOM e enviar
+      document.body.appendChild(form);
+      form.submit();
       
-      if (result.success) {
-        console.log('✅ Feedback enviado com sucesso para Google Sheets!');
-        return true;
-      } else {
-        throw new Error(result.error || 'Erro desconhecido do Google Apps Script');
-      }
+      // Remover form após envio
+      setTimeout(() => {
+        document.body.removeChild(form);
+      }, 1000);
+
+      console.log('✅ Feedback enviado via form submission!');
+      return true;
 
     } catch (error) {
       console.error('❌ Erro ao enviar para Google Sheets:', error);
@@ -93,33 +98,25 @@ export class SheetsService {
       console.log(`🔄 Tentando sincronizar ${pendingFeedbacks.length} feedbacks pendentes...`);
 
       // Tentar enviar cada feedback pendente
-      const results = await Promise.allSettled(
-        pendingFeedbacks.map(feedback => this.sendFeedback(feedback))
-      );
-
-      // Verificar quais foram enviados com sucesso
-      const successfulIndexes: number[] = [];
-      results.forEach((result, index) => {
-        if (result.status === 'fulfilled' && result.value === true) {
-          successfulIndexes.push(index);
+      let successCount = 0;
+      for (const feedback of pendingFeedbacks) {
+        const success = await this.sendFeedback(feedback);
+        if (success) {
+          successCount++;
+          // Pequeno delay entre envios
+          await new Promise(resolve => setTimeout(resolve, 500));
         }
-      });
+      }
 
-      // Remover feedbacks enviados com sucesso da lista pendente
-      if (successfulIndexes.length > 0) {
-        const remainingFeedbacks = pendingFeedbacks.filter(
-          (_, index) => !successfulIndexes.includes(index)
-        );
-
-        if (remainingFeedbacks.length === 0) {
-          localStorage.removeItem(pendingKey);
-          console.log('🎉 Todos os feedbacks pendentes foram sincronizados!');
-        } else {
-          localStorage.setItem(pendingKey, JSON.stringify(remainingFeedbacks));
-          console.log(`⏳ ${remainingFeedbacks.length} feedbacks ainda pendentes de sincronização`);
-        }
+      // Se todos foram enviados com sucesso, limpar localStorage
+      if (successCount === pendingFeedbacks.length) {
+        localStorage.removeItem(pendingKey);
+        console.log('🎉 Todos os feedbacks pendentes foram sincronizados!');
       } else {
-        console.log(`⏳ ${pendingFeedbacks.length} feedbacks ainda pendentes de sincronização`);
+        // Manter apenas os que falharam (assumindo que os primeiros foram enviados)
+        const remainingFeedbacks = pendingFeedbacks.slice(successCount);
+        localStorage.setItem(pendingKey, JSON.stringify(remainingFeedbacks));
+        console.log(`⏳ ${remainingFeedbacks.length} feedbacks ainda pendentes de sincronização`);
       }
 
     } catch (error) {
