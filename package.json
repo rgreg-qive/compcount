@@ -1,6 +1,6 @@
 {
   "name": "compcount-figma-analyzer",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Ferramenta para análise de componentes Figma vs Design System",
   "type": "module",
   "scripts": {
