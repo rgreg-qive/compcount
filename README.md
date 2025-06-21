@@ -25,7 +25,8 @@ src/
 ├── services/
 │   ├── figmaApi.ts           # Serviço para interação com API do Figma
 │   ├── componentAnalyzer.ts  # Lógica de análise de componentes
-│   └── learningService.ts    # Sistema de aprendizado e persistência
+│   ├── learningService.ts    # Sistema de aprendizado e persistência
+│   └── sheetsService.ts      # Integração com Google Sheets para feedbacks
 ├── components/
 │   ├── chartManager.ts       # Gerenciamento de gráficos (Chart.js)
 │   └── uiManager.ts          # Gerenciamento da interface
@@ -187,7 +188,7 @@ interface AnalysisRule {
 ## 🔒 Segurança
 
 - Tokens são armazenados apenas no localStorage do navegador
-- Nenhum dado é enviado para servidores externos
+- Feedbacks são enviados para Google Sheets via Google Apps Script
 - Comunicação direta com a API do Figma
 
 ## 📈 Roadmap

@@ -13,28 +13,21 @@ export interface FeedbackData {
 
 /**
  * Serviço para integração com Google Sheets via form submission
- * Resolve problemas de CORS usando POST form sem AJAX
+ * Utiliza Google Apps Script como intermediário para evitar problemas de CORS
  */
 export class SheetsService {
-  // URL do Google Apps Script (será configurada via env vars)
   private static readonly SCRIPT_URL = Environment.GOOGLE_SCRIPT_URL;
   
   /**
    * Envia feedback para o Google Sheets via form submission
    */
   static async sendFeedback(feedback: FeedbackData): Promise<boolean> {
-    // DEBUG: Verificar variáveis de ambiente
-    console.log('🔍 DEBUG - SCRIPT_URL:', this.SCRIPT_URL);
-    console.log('🔍 DEBUG - SCRIPT_URL existe:', !!this.SCRIPT_URL);
-    
-    // Verificar se URL está configurada
     if (!this.SCRIPT_URL || this.SCRIPT_URL === '') {
       console.warn('⚠️ Google Apps Script URL não configurada. Salvando apenas localmente.');
       return false;
     }
 
     try {
-      // Preparar dados com timestamp e user agent
       const dataToSend = {
         ...feedback,
         timestamp: feedback.timestamp || new Date().toISOString(),
@@ -47,7 +40,7 @@ export class SheetsService {
       const form = document.createElement('form');
       form.method = 'POST';
       form.action = this.SCRIPT_URL;
-      form.target = '_blank'; // Abre em nova aba (será fechada automaticamente)
+      form.target = '_blank';
       form.style.display = 'none';
 
       // Adicionar campos do form
@@ -59,11 +52,11 @@ export class SheetsService {
         form.appendChild(input);
       });
 
-      // Adicionar ao DOM e enviar
+      // Enviar form
       document.body.appendChild(form);
       form.submit();
       
-      // Remover form após envio
+      // Limpar form após envio
       setTimeout(() => {
         document.body.removeChild(form);
       }, 1000);
@@ -97,23 +90,21 @@ export class SheetsService {
 
       console.log(`🔄 Tentando sincronizar ${pendingFeedbacks.length} feedbacks pendentes...`);
 
-      // Tentar enviar cada feedback pendente
       let successCount = 0;
       for (const feedback of pendingFeedbacks) {
         const success = await this.sendFeedback(feedback);
         if (success) {
           successCount++;
-          // Pequeno delay entre envios
+          // Delay entre envios para não sobrecarregar
           await new Promise(resolve => setTimeout(resolve, 500));
         }
       }
 
-      // Se todos foram enviados com sucesso, limpar localStorage
+      // Atualizar localStorage baseado nos sucessos
       if (successCount === pendingFeedbacks.length) {
         localStorage.removeItem(pendingKey);
         console.log('🎉 Todos os feedbacks pendentes foram sincronizados!');
       } else {
-        // Manter apenas os que falharam (assumindo que os primeiros foram enviados)
         const remainingFeedbacks = pendingFeedbacks.slice(successCount);
         localStorage.setItem(pendingKey, JSON.stringify(remainingFeedbacks));
         console.log(`⏳ ${remainingFeedbacks.length} feedbacks ainda pendentes de sincronização`);
@@ -140,7 +131,6 @@ export class SheetsService {
       }
     }
 
-    // Adicionar novo feedback
     pendingFeedbacks.push({
       ...feedback,
       timestamp: feedback.timestamp || new Date().toISOString(),
@@ -155,11 +145,9 @@ export class SheetsService {
    * Processa envio de feedback com fallback inteligente
    */
   static async processFeedback(feedback: FeedbackData): Promise<void> {
-    // Tentar enviar para Google Sheets primeiro
     const success = await this.sendFeedback(feedback);
     
     if (!success) {
-      // Se falhar, salvar localmente
       this.saveFeedbackLocally(feedback);
     }
   }
