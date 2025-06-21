@@ -12,6 +12,12 @@ export class SheetsService {
    * Envia feedback para o Google Sheets
    */
   static async sendFeedback(feedback: FeedbackData): Promise<boolean> {
+    // DEBUG: Verificar variáveis de ambiente
+    console.log('🔍 DEBUG - SHEET_ID:', this.SHEET_ID);
+    console.log('🔍 DEBUG - API_KEY existe:', !!this.API_KEY);
+    console.log('🔍 DEBUG - API_KEY length:', this.API_KEY?.length || 0);
+    console.log('🔍 DEBUG - API_KEY primeiros chars:', this.API_KEY?.substring(0, 10) || 'undefined');
+    
     // Verificar se API está configurada
     if (!this.API_KEY || this.API_KEY === '') {
       console.warn('⚠️ Google Sheets API Key não configurada. Salvando apenas localmente.');
