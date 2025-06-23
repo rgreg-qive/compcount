@@ -212,6 +212,17 @@ class FigmaAnalyzerApp {
       });
     }
 
+    // Pressionar Enter no campo de URL para analisar
+    const urlInput = document.getElementById('figma-url') as HTMLInputElement;
+    if (urlInput) {
+      urlInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          this.analyzeFrame();
+        }
+      });
+    }
+
     // Modal de instruções
     const showInstructionsBtn = document.getElementById('show-instructions');
     const instructionsModal = document.getElementById('instructions-modal');
